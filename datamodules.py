@@ -2,11 +2,12 @@
 import pytorch_lightning as pl
 from google.cloud import storage
 from pathlib import Path
-from datasets import ImageDataset
+from datasets import HitUavDataset
 from torchvision.transforms import Compose
 from transforms import AddShape,ChoseDetection,CropImage,DetectionToClassificaton,ParseTextLabelsToDetections,SelectCropCoordinates,PreapareToModel
 from torch.utils.data import DataLoader
 import torch
+
 class HitUavDataModule(pl.LightningDataModule):
     
     BUCKET_NAME = 'civilian-benchmark-datasets'
@@ -18,26 +19,30 @@ class HitUavDataModule(pl.LightningDataModule):
     TEST = 'test'
     CLASS_NAME_TO_CLASS_VALUE_DICT = {'Person':0 ,'Car':1, 'Bicycle':2 ,'OtherVehicle':3 ,'DontCare':4}
 
-
-
-
-    def __init__(self,root_dir,allowed_classes=None,train_batch_size=32,validation_batch_size=32,test_batch_size=32) -> None:
+    def __init__(self, root_dir, class_mapper: dict, 
+                                                train_batch_size=32, 
+                                                validation_batch_size=32,
+                                                test_batch_size=32) -> None:
         super().__init__()
-
-
         self.root_dir = Path(root_dir)
         self.train_batch_size = train_batch_size
         self.validatoin_batch_size = validation_batch_size
         self.test_batch_size = test_batch_size
 
-        allowed_classes = allowed_classes if allowed_classes is not None else HitUavDataModule.CLASS_NAME_TO_CLASS_VALUE_DICT.keys()
-        allowed_classes_keys = [HitUavDataModule.CLASS_NAME_TO_CLASS_VALUE_DICT[allowed_class] for allowed_class in allowed_classes]
-        self.class_translation_dict = {allowed_classes_key:allowed_classes_keys.index(allowed_classes_key) for allowed_classes_key in allowed_classes_keys}
-
-        self.fit_transforms = Compose([AddShape(),ParseTextLabelsToDetections(fields_sep=' ',image_size=(640,512)),
-        ChoseDetection(allowed_classes_keys),
-        SelectCropCoordinates(area_scale=[0.5,2],ratio=[1,1.5]),CropImage(),
-        DetectionToClassificaton(self.class_translation_dict),PreapareToModel()])
+        # allowed_classes = allowed_classes if allowed_classes is not None else HitUavDataModule.CLASS_NAME_TO_CLASS_VALUE_DICT.keys()
+        # allowed_classes_keys = [HitUavDataModule.CLASS_NAME_TO_CLASS_VALUE_DICT[c]
+        #                         for c, _ in allowed_classes.items()
+        #                         if c in HitUavDataModule.CLASS_NAME_TO_CLASS_VALUE_DICT]
+        
+        # self.class_translation_dict = {allowed_classes_key: allowed_classes_keys.index(allowed_classes_key) 
+        #                                 for allowed_classes_key in allowed_classes_keys}
+        self.class_mapper = class_mapper
+        self.fit_transforms = Compose([ AddShape(),
+                                        ChoseDetection(class_mapper),
+                                        SelectCropCoordinates(area_scale=[0.5,2],ratio=[1,1.5]),
+                                        CropImage(),
+                                        DetectionToClassificaton(),
+                                        PreapareToModel()])
 
     def prepare_data(self):
         storage_client = storage.Client()
@@ -66,17 +71,22 @@ class HitUavDataModule(pl.LightningDataModule):
             validation_data_path = Path(self.root_dir)/Path(HitUavDataModule.DATASET_NAME)/Path(HitUavDataModule.IMAGES)/Path(HitUavDataModule.VALIDATION)
             validation_labels_path = Path(self.root_dir)/Path(HitUavDataModule.DATASET_NAME)/Path(HitUavDataModule.LABELS)/Path(HitUavDataModule.VALIDATION)
 
-            self.train_dataset = ImageDataset(data_dir_path=train_data_path,labels_dir_path=train_labels_path,transforms=self.fit_transforms)
-            self.validation_dataset = ImageDataset(data_dir_path=validation_data_path,labels_dir_path=validation_labels_path,transforms=self.fit_transforms) 
+            self.train_dataset = HitUavDataset(  data_dir_path=train_data_path, 
+                                                class_mapper=self.class_mapper,
+                                                labels_dir_path=train_labels_path, 
+                                                transforms=self.fit_transforms)
+            
+            self.validation_dataset = HitUavDataset( data_dir_path=validation_data_path,
+                                                    class_mapper=self.class_mapper,
+                                                    labels_dir_path=validation_labels_path,
+                                                    transforms=self.fit_transforms) 
         
         if stage == 'test':
             test_data_path = Path(self.root_dir)/Path(HitUavDataModule.DATASET_NAME)/Path(HitUavDataModule.IMAGES)/Path(HitUavDataModule.TEST)
             self.test_dataset = ImageDataset(data_dir_path=test_data_path)
 
-
-    
     def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.train_batch_size)
+        return DataLoader(self.train_dataset, batch_size=self.train_batch_size, num_workers=0)
 
     def val_dataloader(self):
-        return DataLoader(self.validation_dataset, batch_size=self.validatoin_batch_size)
+        return DataLoader(self.validation_dataset, batch_size=self.validatoin_batch_size, num_workers=0)

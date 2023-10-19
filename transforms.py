@@ -1,9 +1,13 @@
+from cProfile import label
+from random import random
 from datasets import Detections,ImageSample,Detection
 import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox
 import torch
 from torchvision import transforms
+from torchvision.transforms.functional import pil_to_tensor
+import random
 
 
 class ParseTextLabelsToDetections():
@@ -13,102 +17,90 @@ class ParseTextLabelsToDetections():
     def __call__(self,sample:ImageSample):
         
         assert type(sample.label) == str, ValueError(f'The type of the label is not str but {type(sample.label)}')
-        sample.label = Detections.parse_from_text(sample.label,**self.kwargs)
+        sample.label = Detections.parse_from_text(sample.label, **self.kwargs)
         return sample
 
 
 class ChoseDetection():
-    BACKGROUND = -1
-    def __init__(self,allowed_classes:list = None,allow_background=True) -> None:
-        self.allowed_classes = set(allowed_classes) if allowed_classes is not None else set([])
+    def __init__(self, allowed_classes:dict, allow_background: bool = True) -> None:
+        self.allowed_classes = allowed_classes
         self.allow_background = allow_background
-
     
     def __call__(self,sample:ImageSample):
         assert type(sample.label) == Detections
         # get all objects from the detections dict
+
         sample_existing_classes = set(sample.label.detections.keys())
-        sample_allowed_and_existing_classes = set.intersection(sample_existing_classes,self.allowed_classes)
 
-        # if there are no objects in the image
-        if len(sample_allowed_and_existing_classes) == 0:
-            sample.label = None
+        if self.allow_background:
+            sample_existing_classes.add(self.allowed_classes['BACKGROUND'])
+
+        selected_class = np.random.choice(list(sample_existing_classes))
         
-        else:
-            if self.allow_background:
-                sample_allowed_and_existing_classes.add(ChoseDetection.BACKGROUND)
+        sample.metadata['chosed_class_name'] = list(self.allowed_classes.keys())[selected_class]
+        sample.metadata['chosed_class_idx'] = selected_class
 
-            selected_class = np.random.choice(list(sample_allowed_and_existing_classes))
-            # Chose a random detection from the instances of the selected class, if background was chosen return None
-            random_detection_of_selected_class = np.random.choice(sample.label.detections.get(selected_class,[None]))
-            sample.label = random_detection_of_selected_class
+        # Chose a random detection from the instances of the selected class, if background was chosen return None
+        random_detection_of_selected_class = np.random.choice(sample.label.detections.get(selected_class,[None]))
+        sample.label = random_detection_of_selected_class
         
         return sample
     
 class AddShape():
     def __call__(self,sample:ImageSample):
         metadata = sample.metadata
-        metadata['H'], metadata['W'] = sample.image.shape
+        metadata['W'], metadata['H'] = sample.image.size
+        sample.image = pil_to_tensor(sample.image)
         return sample
     
-
-        
 class SelectCropCoordinates:
-    def __init__(self,area_scale:Tuple[float,float] = None,ratio:Tuple[float,float]=None) -> None:
-        self.area_scale = area_scale if area_scale is not None else (1.0,1.0)
-        self.ratio = ratio if ratio is not None else (1,2)
+    def __init__(self, area_scale:Tuple[float,float] = (1.0, 1.0), 
+                    ratio:Tuple[float,float] = (1, 2)) -> None:
+        self.area_scale = area_scale
+        self.ratio = ratio
 
-    
     def __call__(self, sample:ImageSample):
-        assert type(sample.label) == Detection or sample.label is None
-        w_frame,h_frame = sample.metadata["W"], sample.metadata["H"]
+        W, H = sample.metadata["W"], sample.metadata["H"]
+                
+        rand_area_range = random.randrange((W // 2) * (H // 2))
+        w_crop, h_crop = self.generate_crop_dimensions(rand_area_range)
         
-        if sample.label is None:
-            # Select random crop
-            w_crop = np.random.randint(1,w_frame)
-            h_crop = np.random.randint(1,h_frame)
-            possible_sampling_range_x = (0,w_frame - w_crop)
-            possible_sampling_range_y = (0,h_frame - h_crop)
+        possible_sampling_range_x = (0, W - w_crop + 1)
+        possible_sampling_range_y = (0, H - h_crop + 1)
 
-
-
-        else:
+        if sample.metadata['chosed_class_name'] != 'BACKGROUND':
+            assert type(sample.label) == Detection
             # Select an augmented crop round the existing detection
-            detection:BoundingBox = sample.label.bbox
-            w_crop, h_crop = crop_shape = self.generate_crop_dimensions(detection.area)
-            x0_detection,y0_detection,w_detection,h_detection = detection.to_coco().raw_values
-            crop_w_larger = w_crop>=w_detection
-            crop_h_larger = h_crop>=h_detection
+            detection: BoundingBox = sample.label.bbox
+            w_crop, h_crop = self.generate_crop_dimensions(detection.area)
+            x0_detection, y0_detection, w_detection, h_detection = detection.to_coco().raw_values
+            crop_w_larger = w_crop >= w_detection
+            crop_h_larger = h_crop >= h_detection
 
-            possible_sampling_range_x = (x0_detection-(w_crop-w_detection),x0_detection) if crop_w_larger else (x0_detection,x0_detection+(w_detection-w_crop))
-            possible_sampling_range_y = (y0_detection-(h_crop-h_detection),y0_detection) if crop_h_larger else (y0_detection,y0_detection+(h_detection-h_crop))
+            possible_sampling_range_x = (x0_detection - (w_crop - w_detection), x0_detection) if crop_w_larger \
+                                        else (x0_detection, x0_detection + (w_detection - w_crop))
+            possible_sampling_range_y = (y0_detection - (h_crop - h_detection), y0_detection) if crop_h_larger \
+                                        else (y0_detection, y0_detection + (h_detection - h_crop))
             
-            possible_sampling_range_x = np.clip(possible_sampling_range_x,0,w_frame - w_crop)
-            possible_sampling_range_y = np.clip(possible_sampling_range_y,0,h_frame - h_crop)
+            possible_sampling_range_x = np.clip(possible_sampling_range_x, 0, W - w_crop)
+            possible_sampling_range_y = np.clip(possible_sampling_range_y, 0, H - h_crop)
         
-        if possible_sampling_range_x[0] == possible_sampling_range_x[1]:
-            x0 = possible_sampling_range_x[0]
-        
-        else:
+        if len(set(possible_sampling_range_x)) > 1:
             x0 = np.random.randint(*possible_sampling_range_x)
-            
-            
-        if possible_sampling_range_y[0] == possible_sampling_range_y[1]:
-            y0 = possible_sampling_range_y[0]
-        
         else:
-            y0 = np.random.randint(*possible_sampling_range_y)
-            
+            x0 = possible_sampling_range_x[0]
 
-        crop = BoundingBox.from_coco(x0,y0,w_crop,h_crop)
+        if len(set(possible_sampling_range_y)) > 1:
+            y0 = np.random.randint(*possible_sampling_range_y)
+        else:
+            y0 = possible_sampling_range_y[0]
+        crop = BoundingBox.from_coco(x0, y0, w_crop, h_crop)
         sample.metadata['crop_coordinates'] = crop
         return sample
 
-
-
     
-    def generate_crop_dimensions(self,area):
-        area =  area*np.random.uniform(*self.area_scale)
+    def generate_crop_dimensions(self, area):
+        area =  area * np.random.uniform(*self.area_scale)
         ratio = np.random.uniform(*self.ratio)
         w = int(np.sqrt(area) * np.sqrt(ratio))
         h = int(np.sqrt(area) / np.sqrt(ratio))
@@ -119,36 +111,21 @@ class SelectCropCoordinates:
 class CropImage():
     def __call__(self,sample:ImageSample):
         x0,y0,x1,y1 = sample.metadata['crop_coordinates'].to_voc().raw_values
-        sample.image = sample.image[x0:x1,y0:y1]
+        sample.image = sample.image[:, y0: y1, x0: x1].float().div(255.0)
         return sample
 
 class DetectionToClassificaton():
-    def __init__(self,cls_translation_dict) -> None:
-
-        self.cls_translation_dict = cls_translation_dict
-        self.bacground_class_number = len(cls_translation_dict)
-    
     def __call__(self,sample:ImageSample):
     
-        if sample.label is None:
-            sample.label = self.bacground_class_number
-        
-        else:
-            assert sample.label.cls in self.cls_translation_dict, ValueError(f'class {self.sample.label.cls} not in translation dict')
-            sample.label = self.cls_translation_dict[sample.label.cls]
-        
+        sample.label = sample.metadata['chosed_class_idx']
         return sample
-
-
 
 class PreapareToModel():
     def __init__(self) -> None:
-        self.img_transfomrs = transforms.Compose([transforms.ToPILImage(mode='L'),
-    transforms.Resize((256,256)),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Lambda(lambda x: x.repeat(3, 1, 1) ),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        self.img_transfomrs = transforms.Compose([
+            transforms.Resize((256,256)),
+            transforms.CenterCrop(224),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     def __call__(self,sample:ImageSample):
         transformed_img =  self.img_transfomrs(sample.image)
