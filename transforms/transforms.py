@@ -1,10 +1,7 @@
-from cProfile import label
-from random import random
-from datasets import Detections,ImageSample,Detection
+from datasets.classes import Detections, ImageSample, Detection
 import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox
-import torch
 from torchvision import transforms
 from torchvision.transforms.functional import pil_to_tensor
 import random
@@ -22,8 +19,8 @@ class ParseTextLabelsToDetections():
 
 
 class ChoseDetection():
-    def __init__(self, allowed_classes:dict, deterministic: bool = False, allow_background: bool = True) -> None:
-        self.allowed_classes = allowed_classes
+    def __init__(self, class2idx: dict, deterministic: bool = False, allow_background: bool = True) -> None:
+        self.class2idx = class2idx
         self.allow_background = allow_background
 
         if deterministic:
@@ -37,11 +34,11 @@ class ChoseDetection():
         sample_existing_classes = set(sample.label.detections.keys())
 
         if self.allow_background:
-            sample_existing_classes.add(self.allowed_classes['BACKGROUND'])
+            sample_existing_classes.add(self.class2idx['BACKGROUND'])
 
         selected_class = np.random.choice(list(sample_existing_classes))
         
-        sample.metadata['chosed_class_name'] = list(self.allowed_classes.keys())[selected_class]
+        sample.metadata['chosed_class_name'] = list(self.class2idx.keys())[selected_class]
         sample.metadata['chosed_class_idx'] = selected_class
 
         # Chose a random detection from the instances of the selected class, if background was chosen return None
@@ -124,7 +121,7 @@ class CropImage():
         return sample
 
 class DetectionToClassificaton():
-    def __call__(self,sample:ImageSample):
+    def __call__(self, sample:ImageSample):
     
         sample.label = sample.metadata['chosed_class_idx']
         return sample
@@ -136,12 +133,10 @@ class PreapareToModel():
             transforms.CenterCrop(224),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-    def __call__(self,sample:ImageSample):
+    def __call__(self, sample:ImageSample):
         transformed_img =  self.img_transfomrs(sample.image)
-        if sample.label is not None:
-            return transformed_img, sample.label
+        return transformed_img, sample.label
         
-        return transformed_img
 
 
 
