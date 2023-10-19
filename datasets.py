@@ -1,4 +1,5 @@
 import imp
+from unicodedata import name
 from torch.utils.data import Dataset
 import os
 from typing import Union,List
@@ -24,25 +25,31 @@ class HitUavDataset(Dataset):
     CLASS_NAME_TO_CLASS_VALUE_DICT = {'Person':0 ,'Car':1, 'Bicycle':2 ,'OtherVehicle':3 ,'DontCare':4}
 
 
-    def __init__(self, data_dir_path, class_mapper: dict, labels_dir_path=None, data_file_extension='.jpg', 
+    def __init__(self, data_root_dir:str, class_mapper: dict, split: str, data_file_extension='.jpg', 
                         label_file_extension='.txt', transforms=None) -> None:
+        self.BUCKET_NAME = 'civilian-benchmark-datasets'
+        self.DATASET_NAME = 'hit-uav'
+        self.IMAGES_DIR_NAME = 'images'
+        self.LABELS_DIR_NAME = 'labels'
+        self.CLASS_NAME_TO_CLASS_VALUE_DICT = {'Person':0 ,'Car':1, 'Bicycle':2 ,'OtherVehicle':3 ,'DontCare':4}
         
-        assert os.path.isdir(data_dir_path) and os.path.isdir(labels_dir_path)
-        self.data_dir_path = data_dir_path
-        self.labels_dir_path = labels_dir_path
+        self.root_dir = f"{data_root_dir}/{self.DATASET_NAME}"
+        self.split = split
         self.transforms = transforms
         self.data_file_extension = data_file_extension
         self.label_file_extension = label_file_extension
 
         self.class_mapper = class_mapper
         self.coupled_data_label_paths = []
+        
         # filter irrelevant files in the data folder and in labels folder if exists
-        data_files_paths = [self.data_dir_path/file_path for file_path in os.listdir(self.data_dir_path) if file_path.endswith(data_file_extension)]
+        data_files_paths = [f"{self.root_dir}/{self.IMAGES_DIR_NAME}/{self.split}/{file_path}" for file_path in os.listdir(f"{self.root_dir}/{self.IMAGES_DIR_NAME}/{self.split}") 
+                                if file_path.endswith(data_file_extension)]
+    
 
         for data_file_path in data_files_paths:
             # find the corresponding label by the data name and labels folder 
-            label_file_path = self.labels_dir_path/(data_file_path.stem + self.label_file_extension)
-
+            label_file_path = f"{self.root_dir}/{self.LABELS_DIR_NAME}/{self.split}/{(data_file_path.split('/')[-1].split('.')[0] + self.label_file_extension)}"
             # Verify that the label exists and if not skip the record
             self.coupled_data_label_paths.append((data_file_path, label_file_path))
                 
@@ -122,9 +129,9 @@ class ImageSample():
     # Notice that the default parser is and gray scale parser
     def from_paths(cls, image_path, label_path, class_mapper):
         # image =  cv.imread(str(image_path),flag)
-        image =  Image.open(str(image_path)).convert("RGB")
+        image =  Image.open(image_path).convert("RGB")
 
-        with open(label_path,mode='r') as file:
+        with open(label_path, 'r') as file:
             label = file.read()
         
         label = Detections.parse_from_text(label, class_mapper)

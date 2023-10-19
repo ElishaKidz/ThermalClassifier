@@ -22,10 +22,14 @@ class ParseTextLabelsToDetections():
 
 
 class ChoseDetection():
-    def __init__(self, allowed_classes:dict, allow_background: bool = True) -> None:
+    def __init__(self, allowed_classes:dict, deterministic: bool = False, allow_background: bool = True) -> None:
         self.allowed_classes = allowed_classes
         self.allow_background = allow_background
-    
+
+        if deterministic:
+            np.random.seed(42)
+
+
     def __call__(self,sample:ImageSample):
         assert type(sample.label) == Detections
         # get all objects from the detections dict
@@ -55,16 +59,20 @@ class AddShape():
     
 class SelectCropCoordinates:
     def __init__(self, area_scale:Tuple[float,float] = (1.0, 1.0), 
-                    ratio:Tuple[float,float] = (1, 2)) -> None:
+                    ratio:Tuple[float,float] = (1, 2), deterministic: bool = False) -> None:
         self.area_scale = area_scale
         self.ratio = ratio
+
+        if deterministic:
+            np.random.seed(42)
+            random.seed(42)
 
     def __call__(self, sample:ImageSample):
         W, H = sample.metadata["W"], sample.metadata["H"]
                 
-        rand_area_range = random.randrange((W // 2) * (H // 2))
+        rand_area_range = random.randrange((W // 2) * (H // 2)) + 100
         w_crop, h_crop = self.generate_crop_dimensions(rand_area_range)
-        
+
         possible_sampling_range_x = (0, W - w_crop + 1)
         possible_sampling_range_y = (0, H - h_crop + 1)
 
@@ -94,6 +102,7 @@ class SelectCropCoordinates:
             y0 = np.random.randint(*possible_sampling_range_y)
         else:
             y0 = possible_sampling_range_y[0]
+
         crop = BoundingBox.from_coco(x0, y0, w_crop, h_crop)
         sample.metadata['crop_coordinates'] = crop
         return sample
@@ -105,12 +114,12 @@ class SelectCropCoordinates:
         w = int(np.sqrt(area) * np.sqrt(ratio))
         h = int(np.sqrt(area) / np.sqrt(ratio))
 
-        return w,h
+        return w, h
 
 
 class CropImage():
     def __call__(self,sample:ImageSample):
-        x0,y0,x1,y1 = sample.metadata['crop_coordinates'].to_voc().raw_values
+        x0, y0, x1, y1 = sample.metadata['crop_coordinates'].to_voc().raw_values
         sample.image = sample.image[:, y0: y1, x0: x1].float().div(255.0)
         return sample
 

@@ -29,13 +29,6 @@ class HitUavDataModule(pl.LightningDataModule):
         self.validatoin_batch_size = validation_batch_size
         self.test_batch_size = test_batch_size
 
-        # allowed_classes = allowed_classes if allowed_classes is not None else HitUavDataModule.CLASS_NAME_TO_CLASS_VALUE_DICT.keys()
-        # allowed_classes_keys = [HitUavDataModule.CLASS_NAME_TO_CLASS_VALUE_DICT[c]
-        #                         for c, _ in allowed_classes.items()
-        #                         if c in HitUavDataModule.CLASS_NAME_TO_CLASS_VALUE_DICT]
-        
-        # self.class_translation_dict = {allowed_classes_key: allowed_classes_keys.index(allowed_classes_key) 
-        #                                 for allowed_classes_key in allowed_classes_keys}
         self.class_mapper = class_mapper
         self.fit_transforms = Compose([ AddShape(),
                                         ChoseDetection(class_mapper),
@@ -61,25 +54,29 @@ class HitUavDataModule(pl.LightningDataModule):
             (self.root_dir/relative_dir).mkdir(parents=True, exist_ok=True)
             blob.download_to_filename(final_file_local_path)
         
+    def get_transforms(self, split):
+        deterministic = False if split == 'train' else True
+        return Compose([
+                    AddShape(),
+                    ChoseDetection(self.class_mapper, deterministic),
+                    SelectCropCoordinates(area_scale=[0.5,2], ratio=[1,1.5], deterministic=deterministic),
+                    CropImage(),
+                    DetectionToClassificaton(),
+                    PreapareToModel()
+                    ])
     
     def setup(self, stage: str) -> None:
         
         if stage == 'fit':
-            train_data_path = Path(self.root_dir)/Path(HitUavDataModule.DATASET_NAME)/Path(HitUavDataModule.IMAGES)/Path(HitUavDataModule.TRAIN)
-            train_labels_path = Path(self.root_dir)/Path(HitUavDataModule.DATASET_NAME)/Path(HitUavDataModule.LABELS)/Path(HitUavDataModule.TRAIN)
-
-            validation_data_path = Path(self.root_dir)/Path(HitUavDataModule.DATASET_NAME)/Path(HitUavDataModule.IMAGES)/Path(HitUavDataModule.VALIDATION)
-            validation_labels_path = Path(self.root_dir)/Path(HitUavDataModule.DATASET_NAME)/Path(HitUavDataModule.LABELS)/Path(HitUavDataModule.VALIDATION)
-
-            self.train_dataset = HitUavDataset(  data_dir_path=train_data_path, 
+            self.train_dataset = HitUavDataset( data_root_dir=self.root_dir,
+                                                split = "train",
                                                 class_mapper=self.class_mapper,
-                                                labels_dir_path=train_labels_path, 
-                                                transforms=self.fit_transforms)
+                                                transforms=self.get_transforms('train'))
             
-            self.validation_dataset = HitUavDataset( data_dir_path=validation_data_path,
-                                                    class_mapper=self.class_mapper,
-                                                    labels_dir_path=validation_labels_path,
-                                                    transforms=self.fit_transforms) 
+            self.validation_dataset = HitUavDataset( data_root_dir=self.root_dir,
+                                                     split = "val",
+                                                     class_mapper=self.class_mapper,
+                                                     transforms=self.get_transforms('val')) 
         
         if stage == 'test':
             test_data_path = Path(self.root_dir)/Path(HitUavDataModule.DATASET_NAME)/Path(HitUavDataModule.IMAGES)/Path(HitUavDataModule.TEST)
