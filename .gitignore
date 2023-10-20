@@ -6,6 +6,8 @@ logs/
 data/
 wandb/
 checkpoints/
+outputs/
+inputs/
 # C extensions
 *.so
 *.vscode
