@@ -37,7 +37,7 @@ class HitUavDataset(Dataset):
         for data_file_path in data_files_paths:
             # find the corresponding label by the data name and labels folder 
             label_file_path = f"{self.root_dir}/{self.label_dir_name}/{self.split}/{(data_file_path.split('/')[-1].split('.')[0] + self.label_file_extension)}"
-            # Verify that the label exists and if not skip the record
+
             self.coupled_data_label_paths.append((data_file_path, label_file_path))
                 
 
@@ -51,7 +51,7 @@ class HitUavDataset(Dataset):
             
         sample = ImageSample.from_paths(data_path, label_path, self.class_mapper)
 
-        if self.transforms is not None:
-            return self.transforms(sample)
+        #if self.transforms is not None:
+        sample = self.transforms(sample)
         
-        return sample
+        return sample.image, sample.label

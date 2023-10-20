@@ -2,7 +2,6 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from data_module import GenericDataModule
 from lightning.pytorch.loggers import WandbLogger
-import os
 from datasets import datasets_data
 from image_multiclass_trainer import ImageMultiClassTrainer
 from models.resnet import resnet18

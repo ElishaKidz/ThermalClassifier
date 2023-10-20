@@ -1,4 +1,5 @@
-import torchvision.models as models
+from typing import Dict, Union, List, Tuple, Optional, Any
+from torch import Tensor
 import pytorch_lightning as pl
 import torch.nn as nn
 import torch

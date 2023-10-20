@@ -63,7 +63,6 @@ class ImageSample():
     @classmethod
     # Notice that the default parser is and gray scale parser
     def from_paths(cls, image_path, label_path, class_mapper):
-        # image =  cv.imread(str(image_path),flag)
         image =  Image.open(image_path).convert("RGB")
 
         with open(label_path, 'r') as file:

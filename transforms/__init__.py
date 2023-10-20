@@ -1,4 +1,4 @@
-from .transforms import AddShape, ChoseDetection, CropImage, DetectionToClassificaton, SelectCropCoordinates, PreapareToModel
+from .transforms import AddShape, ChoseDetection, CropImage, DetectionToClassificaton, PreapareToResnet, SelectCropCoordinates
 from torchvision.transforms import Compose
 
 
@@ -9,5 +9,5 @@ def hit_uav_transforms(split, class2idx):
                     SelectCropCoordinates(area_scale=[0.5,2], ratio=[1,1.5], deterministic=deterministic),
                     CropImage(),
                     DetectionToClassificaton(),
-                    PreapareToModel()
+                    PreapareToResnet()
                     ])

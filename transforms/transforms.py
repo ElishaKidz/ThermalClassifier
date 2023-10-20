@@ -67,9 +67,7 @@ class SelectCropCoordinates:
     def __call__(self, sample:ImageSample):
         W, H = sample.metadata["W"], sample.metadata["H"]
                 
-        rand_area_range = random.randrange((W // 2) * (H // 2)) + 100
-        w_crop, h_crop = self.generate_crop_dimensions(rand_area_range)
-
+        w_crop, h_crop = np.random.randint(1, W), np.random.randint(1, H)
         possible_sampling_range_x = (0, W - w_crop + 1)
         possible_sampling_range_y = (0, H - h_crop + 1)
 
@@ -126,7 +124,7 @@ class DetectionToClassificaton():
         sample.label = sample.metadata['chosed_class_idx']
         return sample
 
-class PreapareToModel():
+class PreapareToResnet():
     def __init__(self) -> None:
         self.img_transfomrs = transforms.Compose([
             transforms.Resize((256,256)),
@@ -134,8 +132,8 @@ class PreapareToModel():
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     def __call__(self, sample:ImageSample):
-        transformed_img =  self.img_transfomrs(sample.image)
-        return transformed_img, sample.label
+        sample.image =  self.img_transfomrs(sample.image)
+        return sample
         
 
 

@@ -1,6 +1,8 @@
 import torchvision.models as models
 import torch.nn as nn
 import torch
+from torchvision import transforms
+
 
 class resnet18(nn.Module):
     def __init__(self, num_target_classes) -> None:
@@ -12,7 +14,7 @@ class resnet18(nn.Module):
         layers = list(backbone.children())[:-1]
         self.feature_extractor = nn.Sequential(*layers)
         self.classifier = nn.Linear(num_filters, self.num_target_classes)
-
+    
     def load_from_lightning_ckpt(self, ckpt_path):
         self.load_state_dict(torch.load(ckpt_path)['state_dict'])
 
