@@ -4,7 +4,7 @@ from typing import Tuple
 from pybboxes import BoundingBox
 import torch
 from torchvision import transforms
-
+from typing import Union
 
 class ParseTextLabelsToDetections():
     def __init__(self,**kwargs):
@@ -150,10 +150,12 @@ class PreapareToModel():
     transforms.Lambda(lambda x: x.repeat(3, 1, 1) ),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-    def __call__(self,sample:ImageSample):
-        transformed_img =  self.img_transfomrs(sample.image)
-        if sample.label is not None:
-            return transformed_img, sample.label
+    def __call__(self,sample:Union[ImageSample,np.array]):
+        img = sample.image if type(sample) == ImageSample else sample
+        label = sample.label if  type(sample) == ImageSample else None
+        transformed_img =  self.img_transfomrs(img)
+        if label is not None:
+            return transformed_img, label
         
         return transformed_img
 
