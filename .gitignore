@@ -8,6 +8,7 @@ wandb/
 checkpoints/
 outputs/
 inputs/
+.vscode/
 # C extensions
 *.so
 *.vscode
