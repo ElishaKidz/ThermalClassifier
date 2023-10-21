@@ -9,12 +9,12 @@ import torch
 class Detection:
     bbox: BoundingBox
     cls: Union[str,int] = None
-    constructors_of_supported_formats = {'yolo':BoundingBox.from_yolo,}
+    constructors_of_supported_formats = {'yolo': BoundingBox.from_yolo,}
 
     @classmethod
-    def load_generic_mode(cls,bbox,cl=None,mode='yolo',**kwargs):
-        bbox = Detection.constructors_of_supported_formats[mode](*bbox,**kwargs)
-        return cls(bbox,cl)
+    def load_generic_mode(cls, bbox, cl=None, mode='yolo', **kwargs):
+        bbox = Detection.constructors_of_supported_formats[mode](*bbox, **kwargs).to_coco()
+        return cls(bbox, cl)
     
 @dataclass
 class Detections:
@@ -22,7 +22,7 @@ class Detections:
     NO_CLS = 'no_cls'
 
     @classmethod
-    # fields_sep=' ',image_size=(640,512)
+    # fields_sep=' ',image_size=(640, 512)
     def parse_from_text(cls, txt:str, class_mapper: dict, line_sep='\n', fields_sep=' ', image_size=(640,512)):
         detections = {}
 
@@ -56,8 +56,8 @@ class Detections:
 
 @dataclass
 class ImageSample():
-    image: Union[np.array,torch.Tensor]
-    label: Union[int,str,Detections]
+    image: Union[np.array, torch.Tensor]
+    label: Union[int, str, Detections]
     metadata = {}
     
     @classmethod

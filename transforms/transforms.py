@@ -3,18 +3,15 @@ import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox
 from torchvision import transforms
-from torchvision.transforms.functional import pil_to_tensor
+from torchvision.transforms.functional import resize
 import random
 
 
-class ParseTextLabelsToDetections():
-    def __init__(self,**kwargs):
-        self.kwargs = kwargs
-    
-    def __call__(self,sample:ImageSample):
-        
-        assert type(sample.label) == str, ValueError(f'The type of the label is not str but {type(sample.label)}')
-        sample.label = Detections.parse_from_text(sample.label, **self.kwargs)
+# Need to revised this !
+class DownSampleImage():
+    def __call__(self, sample: ImageSample, down_sacle_factor: float):
+        sample.image = resize(sample.image)
+        sample.label = sample.label.scale(down_sacle_factor)
         return sample
 
 
@@ -48,12 +45,19 @@ class ChoseDetection():
         return sample
     
 class AddShape():
-    def __call__(self,sample:ImageSample):
+    def __call__(self, sample: ImageSample):
         metadata = sample.metadata
         metadata['W'], metadata['H'] = sample.image.size
-        sample.image = pil_to_tensor(sample.image)
         return sample
-    
+
+class ToTensor():
+    def __init__(self) -> None:
+        self.transform = transforms.ToTensor()
+
+    def __call__(self, sample: ImageSample):
+        sample.image = self.transform(sample.image)
+        return sample
+
 class SelectCropCoordinates:
     def __init__(self, area_scale:Tuple[float,float] = (1.0, 1.0), 
                     ratio:Tuple[float,float] = (1, 2), deterministic: bool = False) -> None:
@@ -76,7 +80,7 @@ class SelectCropCoordinates:
             # Select an augmented crop round the existing detection
             detection: BoundingBox = sample.label.bbox
             w_crop, h_crop = self.generate_crop_dimensions(detection.area)
-            x0_detection, y0_detection, w_detection, h_detection = detection.to_coco().raw_values
+            x0_detection, y0_detection, w_detection, h_detection = detection.raw_values
             crop_w_larger = w_crop >= w_detection
             crop_h_larger = h_crop >= h_detection
 
@@ -99,7 +103,7 @@ class SelectCropCoordinates:
             y0 = possible_sampling_range_y[0]
 
         crop = BoundingBox.from_coco(x0, y0, w_crop, h_crop)
-        sample.metadata['crop_coordinates'] = crop
+        sample.metadata['crop_coordinates'] = crop.to_voc().raw_values
         return sample
 
     
@@ -113,13 +117,13 @@ class SelectCropCoordinates:
 
 
 class CropImage():
-    def __call__(self,sample:ImageSample):
-        x0, y0, x1, y1 = sample.metadata['crop_coordinates'].to_voc().raw_values
-        sample.image = sample.image[:, y0: y1, x0: x1].float().div(255.0)
+    def __call__(self, sample: ImageSample):
+        x0, y0, x1, y1 = sample.metadata['crop_coordinates']
+        sample.image = sample.image[:, y0: y1, x0: x1]
         return sample
 
 class DetectionToClassificaton():
-    def __call__(self, sample:ImageSample):
+    def __call__(self, sample: ImageSample):
     
         sample.label = sample.metadata['chosed_class_idx']
         return sample
@@ -127,8 +131,8 @@ class DetectionToClassificaton():
 class PreapareToResnet():
     def __init__(self) -> None:
         self.img_transfomrs = transforms.Compose([
-            transforms.Resize((256,256)),
-            transforms.CenterCrop(224),
+            transforms.Resize((72, 90), antialias=False),
+            #transforms.CenterCrop(224),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     def __call__(self, sample:ImageSample):
