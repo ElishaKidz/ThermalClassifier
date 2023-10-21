@@ -29,7 +29,7 @@ data_module = GenericDataModule(root_dir=args.root_data_dir,
                             class_mapper=class_mapper)
 
 model = resnet18(num_target_classes=len(classes))
-lightning_model = ImageMultiClassTrainer(num_target_classes=len(classes), model=model)
+lightning_model = ImageMultiClassTrainer(class2idx=new_class2index, model=model)
 
 checkpoint_callback = ModelCheckpoint(dirpath=f"gcs://soi-models/VMD-classifier/{args.exp_name}/checkpoints",
                                     monitor='val_MulticlassAccuracy',
@@ -48,3 +48,5 @@ trainer = pl.Trainer(default_root_dir=f"gcs://soi-models/VMD-classifier/{args.ex
                     max_epochs=100)
 
 trainer.fit(lightning_model, datamodule=data_module)
+
+trainer.test(lightning_model, datamodule=data_module, ckpt_path='best')

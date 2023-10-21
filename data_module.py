@@ -13,9 +13,9 @@ class GenericDataModule(pl.LightningDataModule):
                 train_batch_size: int = 32, 
                 val_batch_size: int = 32,
                 test_batch_size: int = 32,
-                train_num_workers: int = 0,
-                val_num_workers: int = 0,
-                test_num_workers: int = 0) -> None:
+                train_num_workers: int = 2,
+                val_num_workers: int = 2,
+                test_num_workers: int = 2) -> None:
 
         super().__init__()
 
@@ -49,7 +49,7 @@ class GenericDataModule(pl.LightningDataModule):
                                                     split="val",
                                                     class2idx=self.class2idx,
                                                     class_mapper=self.class_mapper) 
-        
+
         if stage == 'test':
             self.test_dataset = datasets_dict[self.dataset_name](data_root_dir=self.root_dir,
                                               split="test",
