@@ -2,19 +2,18 @@ from argparse import ArgumentParser
 from pathlib import Path
 from datasets.classes import ImageSample
 from models.resnet import ModelRepo 
-from image_multiclass_trainer import ImageMultiClassTrainer
 import pandas as pd
 import utils
 import cv2 as cv
 from pybboxes import BoundingBox
 import pybboxes as pbx
-from torch.utils.data import DataLoader
 from transforms.prepare_to_models import Model2Transforms
 import torch
 import logging
 from PIL import Image
 from torchvision.transforms.functional import pil_to_tensor
 import gcsfs
+from transforms import inference_transforms
 
 
 def load_model(model_class, ckpt):
@@ -47,20 +46,12 @@ parser.add_argument('--rendered_video_save_path',type=str,default=Path('outputs/
 
 logging.basicConfig(level=logging.DEBUG)
 args = parser.parse_args()
-# video_cap = utils.create_video_capture(args.video_path)
+video_cap = utils.create_video_capture(args.video_path)
 
 # The following raw assumes that all models constructors accept only num of classes as input, not sure that this assumption will hold. 
 
-# num_target_classes is the only required parameter to our models.
-
-
-
-# themral_model = ModelRepo.registry[args.model_name](args.num_target_classes)
-# trainer = ImageMultiClassTrainer.load_from_checkpoint(args.ckpt_path,model = themral_model) # will be only used for its hyperparameters 
-# themral_model = trainer.model
-# themral_model.eval()
-# classes_to_labels_translation = trainer.idx_to_class_mapping
 fs = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
+
 device = 'cpu' if args.device is None else torch.device(f'cuda:{args.device}')
 thermal_model, class2idx = load_model(ModelRepo.registry[args.model_name], args.ckpt_path)
 thermal_model.to(device)
@@ -70,7 +61,7 @@ classes_to_labels_translation = {index: class_name for class_name, index in clas
 
 bboxes_df = pd.read_csv(args.video_bboxes_path,index_col=0)
 
-transfrom = Model2Transforms.registry[args.model_name]()
+# transfrom = Model2Transforms.registry[args.model_name]()
 predictions = []
 while True:
         frame_num = video_cap.get(cv.CAP_PROP_POS_FRAMES)
@@ -92,11 +83,12 @@ while True:
             frame_related_bbox = frame_related_bboxes[i,:]
             frame_related_bbox = BoundingBox.from_coco(*pbx.convert_bbox(frame_related_bbox,from_type=args.bbox_format,to_type='coco'))
             x0,y0,x1,y1 = frame_related_bbox.to_voc().raw_values
-            croped_frame = frame[:, y0: y1, x0: x1].float().div(255.0)
+            #croped_frame = frame[:, y0: y1, x0: x1].float().div(255.0)
+            croped_frame = frame[:, y0: y1, x0: x1]
             sample = ImageSample(image=croped_frame, label=None)
             frame_crops_according_to_bboxes.append(sample)
         
-        crops_ready_to_model = list(map(lambda sample: transfrom(sample).image, frame_crops_according_to_bboxes))
+        crops_ready_to_model = list(map(lambda sample: inference_transforms(sample).image, frame_crops_according_to_bboxes))
         batch = torch.stack(crops_ready_to_model,axis=0).to(device)
         preds = torch.argmax(thermal_model(batch), dim=1)
         predictions.extend(list(preds.cpu().detach().tolist()))
