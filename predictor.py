@@ -14,9 +14,11 @@ import torch
 import logging
 from PIL import Image
 from torchvision.transforms.functional import pil_to_tensor
+import gcsfs
+
 
 def load_model(model_class, ckpt):
-    torch_dict = torch.load(ckpt,map_location='cpu')
+    torch_dict = torch.load(fs.open(ckpt, "rb"), map_location='cpu')
     state_dict = {key.replace("model.", "") : value for key, value in torch_dict["state_dict"].items()}     
     class2idx = torch_dict['hyper_parameters']["class2idx"]
     # TODO we need to save idx2class
@@ -29,7 +31,7 @@ def load_model(model_class, ckpt):
 parser = ArgumentParser()
 parser.add_argument('--video_path',type=str)
 parser.add_argument('--video_bboxes_path', type=str)
-parser.add_argument('--ckpt_path',type = str,default=Path('checkpoints/VMD-classifier_debug_checkpoints_epoch=55-step=3528.ckpt'))
+parser.add_argument('--ckpt_path',type = str,default='gs://soi-models/VMD-classifier/debug/checkpoints/epoch=76-step=4851.ckpt')
 parser.add_argument('--model_name',default='resnet18',type=str)
 parser.add_argument('--num_target_classes',type=int,default=4)
 
@@ -45,7 +47,7 @@ parser.add_argument('--rendered_video_save_path',type=str,default=Path('outputs/
 
 logging.basicConfig(level=logging.DEBUG)
 args = parser.parse_args()
-video_cap = utils.create_video_capture(args.video_path)
+# video_cap = utils.create_video_capture(args.video_path)
 
 # The following raw assumes that all models constructors accept only num of classes as input, not sure that this assumption will hold. 
 
@@ -58,6 +60,7 @@ video_cap = utils.create_video_capture(args.video_path)
 # themral_model = trainer.model
 # themral_model.eval()
 # classes_to_labels_translation = trainer.idx_to_class_mapping
+fs = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
 device = 'cpu' if args.device is None else torch.device(f'cuda:{args.device}')
 thermal_model, class2idx = load_model(ModelRepo.registry[args.model_name], args.ckpt_path)
 thermal_model.to(device)

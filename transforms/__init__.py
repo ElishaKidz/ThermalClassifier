@@ -13,3 +13,10 @@ def hit_uav_transforms(split, class2idx):
                     DetectionToClassificaton(),
                     PreapareToResnet()
                     ])
+
+def inference_transforms():
+    return Compose([
+        AddShape(),
+        ToTensor(),
+        PreapareToResnet()
+    ])

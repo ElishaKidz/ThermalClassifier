@@ -2,7 +2,6 @@ from datasets.classes import Detections, ImageSample, Detection
 import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox
-from torchvision.transforms.functional import pil_to_tensor
 import random
 from torchvision import transforms
 
@@ -60,7 +59,6 @@ class AddShape():
     def __call__(self,sample:ImageSample):
         metadata = sample.metadata
         metadata['W'], metadata['H'] = sample.image.size
-        sample.image = pil_to_tensor(sample.image)
         return sample
     
 class SelectCropCoordinates:
@@ -75,8 +73,8 @@ class SelectCropCoordinates:
 
     def __call__(self, sample:ImageSample):
         W, H = sample.metadata["W"], sample.metadata["H"]
-                
-        w_crop, h_crop = np.random.randint(1, W), np.random.randint(1, H)
+        min_w_crop_size, min_h_crop_size = 10, 10         
+        w_crop, h_crop = int(np.clip(np.random.exponential(30), min_w_crop_size, W)), int(np.clip(np.random.exponential(30), min_h_crop_size, H))
         possible_sampling_range_x = (0, W - w_crop + 1)
         possible_sampling_range_y = (0, H - h_crop + 1)
 
@@ -124,7 +122,7 @@ class SelectCropCoordinates:
 class CropImage():
     def __call__(self,sample:ImageSample):
         x0, y0, x1, y1 = sample.metadata['crop_coordinates'].to_voc().raw_values
-        sample.image = sample.image[:, y0: y1, x0: x1].float().div(255.0)
+        sample.image = sample.image[:, y0: y1, x0: x1]
         return sample
 
 class DetectionToClassificaton():
