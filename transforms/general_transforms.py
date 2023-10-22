@@ -4,16 +4,19 @@ from typing import Tuple
 from pybboxes import BoundingBox
 import random
 from torchvision import transforms
+from torchvision.transforms.functional import resize
 
 
-class ParseTextLabelsToDetections():
-    def __init__(self,**kwargs):
-        self.kwargs = kwargs
-    
-    def __call__(self,sample:ImageSample):
-        
-        assert type(sample.label) == str, ValueError(f'The type of the label is not str but {type(sample.label)}')
-        sample.label = Detections.parse_from_text(sample.label, **self.kwargs)
+class DownSampleImage():
+    def __init__(self, down_scale_factor) -> None:
+        self.down_scale_factor = down_scale_factor
+
+    def __call__(self, sample: ImageSample):
+        # image size is [C, H, W] 
+        scale_size = int(min(sample.image.shape[1:]) * self.down_scale_factor)
+        sample.image = resize(sample.image, size=scale_size, antialias=False)
+        if isinstance(sample.label, Detection):
+            sample.label.bbox.scale(self.down_scale_factor ** 2)
         return sample
 
 class ToTensor():
@@ -57,7 +60,7 @@ class ChoseDetection():
 class AddShape():
     def __call__(self,sample:ImageSample):
         metadata = sample.metadata
-        metadata['W'], metadata['H'] = sample.image.size
+        _, metadata['H'], metadata['W'] = sample.image.shape
         return sample
     
 class SelectCropCoordinates:
@@ -70,9 +73,9 @@ class SelectCropCoordinates:
             np.random.seed(42)
             random.seed(42)
 
-    def __call__(self, sample:ImageSample):
+    def __call__(self, sample: ImageSample):
         W, H = sample.metadata["W"], sample.metadata["H"]
-        min_w_crop_size, min_h_crop_size = 10, 10         
+        min_w_crop_size, min_h_crop_size = 10, 10
         w_crop, h_crop = int(np.clip(np.random.exponential(30), min_w_crop_size, W)), int(np.clip(np.random.exponential(30), min_h_crop_size, H))
         possible_sampling_range_x = (0, W - w_crop + 1)
         possible_sampling_range_y = (0, H - h_crop + 1)
@@ -82,7 +85,7 @@ class SelectCropCoordinates:
             # Select an augmented crop round the existing detection
             detection: BoundingBox = sample.label.bbox
             w_crop, h_crop = self.generate_crop_dimensions(detection.area)
-            x0_detection, y0_detection, w_detection, h_detection = detection.to_coco().raw_values
+            x0_detection, y0_detection, w_detection, h_detection = detection.raw_values
             crop_w_larger = w_crop >= w_detection
             crop_h_larger = h_crop >= h_detection
 

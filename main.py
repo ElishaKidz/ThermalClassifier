@@ -23,8 +23,6 @@ if args.add_background_label:
     new_class2index['BACKGROUND'] = len(classes)
     classes.append('BACKGROUND')
 ###
-index2class = {idx:cl for cl,idx in new_class2index.items()}
-
 
 
 data_module = GenericDataModule(root_dir=args.root_data_dir, 
