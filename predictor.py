@@ -61,7 +61,7 @@ classes_to_labels_translation = {index: class_name for class_name, index in clas
 
 bboxes_df = pd.read_csv(args.video_bboxes_path,index_col=0)
 
-# transfrom = Model2Transforms.registry[args.model_name]()
+transfrom = inference_transforms() #Model2Transforms.registry[args.model_name]()
 predictions = []
 while True:
         frame_num = video_cap.get(cv.CAP_PROP_POS_FRAMES)
@@ -70,9 +70,8 @@ while True:
         if not success or frame_num>= args.frame_limit:
             break
 
-        frame = cv.cvtColor(frame,cv.COLOR_BGR2RGB)
+        frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
         frame = Image.fromarray(frame)
-        frame = pil_to_tensor(frame)
 
         frame_related_bboxes = bboxes_df[bboxes_df[args.frame_col_name]==frame_num][args.bbox_col_names].values
         if len(frame_related_bboxes) == 0:
@@ -82,13 +81,13 @@ while True:
         for i in range(frame_related_bboxes.shape[0]):
             frame_related_bbox = frame_related_bboxes[i,:]
             frame_related_bbox = BoundingBox.from_coco(*pbx.convert_bbox(frame_related_bbox,from_type=args.bbox_format,to_type='coco'))
-            x0,y0,x1,y1 = frame_related_bbox.to_voc().raw_values
+            x0, y0, x1, y1 = frame_related_bbox.to_voc().raw_values
             #croped_frame = frame[:, y0: y1, x0: x1].float().div(255.0)
-            croped_frame = frame[:, y0: y1, x0: x1]
-            sample = ImageSample(image=croped_frame, label=None)
+            sample = ImageSample(image=frame, label=None)
+            sample.metadata = {'crop_coordinates': [x0, y0, x1, y1]}
             frame_crops_according_to_bboxes.append(sample)
         
-        crops_ready_to_model = list(map(lambda sample: inference_transforms(sample).image, frame_crops_according_to_bboxes))
+        crops_ready_to_model = list(map(lambda sample: transfrom(sample).image, frame_crops_according_to_bboxes))
         batch = torch.stack(crops_ready_to_model,axis=0).to(device)
         preds = torch.argmax(thermal_model(batch), dim=1)
         predictions.extend(list(preds.cpu().detach().tolist()))

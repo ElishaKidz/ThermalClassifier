@@ -108,7 +108,7 @@ class SelectCropCoordinates:
             y0 = possible_sampling_range_y[0]
 
         crop = BoundingBox.from_coco(x0, y0, w_crop, h_crop)
-        sample.metadata['crop_coordinates'] = crop
+        sample.metadata['crop_coordinates'] = crop.to_voc().raw_values
         return sample
 
     
@@ -122,7 +122,7 @@ class SelectCropCoordinates:
 
 class CropImage():
     def __call__(self,sample:ImageSample):
-        x0, y0, x1, y1 = sample.metadata['crop_coordinates'].to_voc().raw_values
+        x0, y0, x1, y1 = sample.metadata['crop_coordinates']
         sample.image = sample.image[:, y0: y1, x0: x1]
         return sample
 

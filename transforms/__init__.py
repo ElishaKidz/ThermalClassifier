@@ -19,5 +19,6 @@ def inference_transforms():
     return Compose([
         ToTensor(),
         AddShape(),
+        CropImage(),
         PreapareToResnet()
     ])
