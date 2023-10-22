@@ -18,10 +18,14 @@ original_class2index = datasets_data[args.dataset_name]["CLASS_TO_IDX"]
 # convert the old class id to new class id
 class_mapper = {old_idx: new_class2index[class_name] for class_name, old_idx in original_class2index.items() 
                                                 if class_name in classes}
+
 if args.add_background_label:
     new_class2index['BACKGROUND'] = len(classes)
     classes.append('BACKGROUND')
 ###
+index2class = {idx:cl for cl,idx in new_class2index.items()}
+
+
 
 data_module = GenericDataModule(root_dir=args.root_data_dir, 
                             dataset_name=args.dataset_name,
@@ -29,7 +33,7 @@ data_module = GenericDataModule(root_dir=args.root_data_dir,
                             class_mapper=class_mapper)
 
 model = resnet18(num_target_classes=len(classes))
-lightning_model = ImageMultiClassTrainer(num_target_classes=len(classes), model=model)
+lightning_model = ImageMultiClassTrainer(num_target_classes=len(classes), model=model,idx_to_class_mapping=index2class)
 
 checkpoint_callback = ModelCheckpoint(dirpath=f"gcs://soi-models/VMD-classifier/{args.exp_name}/checkpoints",
                                     monitor='val_MulticlassAccuracy',

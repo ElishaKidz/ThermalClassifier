@@ -1,4 +1,5 @@
-from .transforms import AddShape, ChoseDetection, CropImage, DetectionToClassificaton, PreapareToResnet, SelectCropCoordinates
+from .general_transforms import AddShape, ChoseDetection, CropImage, DetectionToClassificaton, SelectCropCoordinates
+from .prepare_to_models import PreapareToResnet
 from torchvision.transforms import Compose
 
 

@@ -7,12 +7,14 @@ from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall
 
 class ImageMultiClassTrainer(pl.LightningModule):
-    def __init__(self, num_target_classes, model, learning_rate = 1e-3):
+    def __init__(self, num_target_classes, model, learning_rate = 1e-3,idx_to_class_mapping:dict = None):
         super().__init__()
         self.num_target_classes = num_target_classes
         self.model = model
         self.loss = nn.CrossEntropyLoss()
         self.learning_rate = learning_rate
+        self.idx_to_class_mapping = idx_to_class_mapping
+        self.save_hyperparameters(ignore='model')
 
         metrics = MetricCollection([
             MulticlassAccuracy(self.num_target_classes), 

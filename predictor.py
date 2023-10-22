@@ -1,23 +1,30 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from models import ThermalModel
+import models.resnet
+from models.resnet import ModelRepo 
+from image_multiclass_trainer import ImageMultiClassTrainer
 import pandas as pd
 import utils
 import cv2 as cv
 from pybboxes import BoundingBox
 import pybboxes as pbx
 from torch.utils.data import DataLoader
-from transforms import PreapareToModel
+from transforms.prepare_to_models import Model2Transforms
 import torch
 import logging
+from PIL import Image
+from torchvision.transforms.functional import pil_to_tensor
+
 parser = ArgumentParser()
 parser.add_argument('--video_path',type=str)
 parser.add_argument('--video_bboxes_path', type=str)
-parser.add_argument('--ckpt_path',type = str,default=Path('checkpoints/VMD-classifier_debug_checkpoints_epoch=62-step=3969.ckpt'))
+parser.add_argument('--ckpt_path',type = str,default=Path('checkpoints/VMD-classifier_debug_checkpoints_epoch=55-step=3528.ckpt'))
+parser.add_argument('--model_name',default='resnet18',type=str)
+parser.add_argument('--num_target_classes',type=int,default=4)
+
 parser.add_argument('--frame_col_name',type=str,default='frame_num')
 parser.add_argument('--bbox_col_names',nargs='+',default=['x','y','width','height'])
 parser.add_argument('--class_col_name',type=str,default='cls')
-
 parser.add_argument('--bbox_format',type=str,default='coco')
 parser.add_argument('--frame_limit',type=int,default=500)
 parser.add_argument('--device',type=int,default=None)
@@ -26,15 +33,23 @@ parser.add_argument('--bbox_save_path',type=str,default=Path('outputs/bboxes/res
 parser.add_argument('--rendered_video_save_path',type=str,default=Path('outputs/videos/result.mp4'))
 
 logging.basicConfig(level=logging.DEBUG)
-
-classes_to_labels_translation = {0:'Person',1:'Car',2:'OtherVehicle',3:'Background'}
 args = parser.parse_args()
 video_cap = utils.create_video_capture(args.video_path)
-themral_model = ThermalModel.load_from_checkpoint(args.ckpt_path,num_target_classes=len(classes_to_labels_translation))
+
+# The following raw assumes that all models constructors accept only num of classes as input, not sure that this assumption will hold. 
+
+# num_target_classes is the only required parameter to our models.
+
+themral_model = ModelRepo.registry[args.model_name](args.num_target_classes)
+trainer = ImageMultiClassTrainer.load_from_checkpoint(args.ckpt_path,model = themral_model) # will be only used for its hyperparameters 
+themral_model = trainer.model
 themral_model.eval()
+
+classes_to_labels_translation = trainer.idx_to_class_mapping
+
 bboxes_df = pd.read_csv(args.video_bboxes_path,index_col=0)
 
-transfrom = PreapareToModel()
+transfrom = Model2Transforms[args.model_mame]
 device = 'cpu' if args.device is None else torch.device(f'cuda:{args.device}')
 predictions = []
 while True:
@@ -44,7 +59,9 @@ while True:
         if not success or frame_num>= args.frame_limit:
             break
 
-        frame = cv.cvtColor(frame,cv.COLOR_BGR2GRAY)
+        frame = cv.cvtColor(frame,cv.COLOR_BGR2RGB)
+        frame = Image.fromarray(frame)
+        frame = pil_to_tensor(frame)
 
         frame_related_bboxes = bboxes_df[bboxes_df[args.frame_col_name]==frame_num][args.bbox_col_names].values
         if len(frame_related_bboxes) == 0:
@@ -55,7 +72,7 @@ while True:
             frame_related_bbox = frame_related_bboxes[i,:]
             frame_related_bbox = BoundingBox.from_coco(*pbx.convert_bbox(frame_related_bbox,from_type=args.bbox_format,to_type='coco'))
             x0,y0,x1,y1 = frame_related_bbox.to_voc().raw_values
-            croped_frame = frame[y0:y1,x0:x1]
+            croped_frame = frame[y0:y1,x0:x1].float().div(255.0)
             frame_crops_according_to_bboxes.append(croped_frame)
         
         crops_ready_to_model = list(map(lambda crop: transfrom(crop),frame_crops_according_to_bboxes))

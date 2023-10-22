@@ -2,7 +2,6 @@ from datasets.classes import Detections, ImageSample, Detection
 import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox
-from torchvision import transforms
 from torchvision.transforms.functional import pil_to_tensor
 import random
 
@@ -124,16 +123,6 @@ class DetectionToClassificaton():
         sample.label = sample.metadata['chosed_class_idx']
         return sample
 
-class PreapareToResnet():
-    def __init__(self) -> None:
-        self.img_transfomrs = transforms.Compose([
-            transforms.Resize((256,256)),
-            transforms.CenterCrop(224),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-
-    def __call__(self, sample:ImageSample):
-        sample.image =  self.img_transfomrs(sample.image)
-        return sample
         
 
 
