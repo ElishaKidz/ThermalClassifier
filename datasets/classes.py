@@ -57,9 +57,9 @@ class Detections:
 @dataclass
 class ImageSample():
     image: Union[np.array, torch.Tensor]
-    label: Union[int, str, Detections]
+    label: Union[int, str, Detections, None]
     metadata = {}
-    
+
     @classmethod
     # Notice that the default parser is and gray scale parser
     def from_paths(cls, image_path, label_path, class_mapper):

@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
-import models.resnet
+from datasets.classes import ImageSample
 from models.resnet import ModelRepo 
 from image_multiclass_trainer import ImageMultiClassTrainer
 import pandas as pd
@@ -14,6 +14,17 @@ import torch
 import logging
 from PIL import Image
 from torchvision.transforms.functional import pil_to_tensor
+
+def load_model(model_class, ckpt):
+    torch_dict = torch.load(ckpt)
+    state_dict = {key.replace("model.", "") : value for key, value in torch_dict["state_dict"].items()}     
+    class2idx = torch_dict['hyper_parameters']["class2idx"]
+    # TODO we need to save idx2class
+    model = model_class(len(class2idx))
+    model.load_state_dict(state_dict)
+        
+    return model, class2idx
+
 
 parser = ArgumentParser()
 parser.add_argument('--video_path',type=str)
@@ -40,12 +51,17 @@ video_cap = utils.create_video_capture(args.video_path)
 
 # num_target_classes is the only required parameter to our models.
 
-themral_model = ModelRepo.registry[args.model_name](args.num_target_classes)
-trainer = ImageMultiClassTrainer.load_from_checkpoint(args.ckpt_path,model = themral_model) # will be only used for its hyperparameters 
-themral_model = trainer.model
-themral_model.eval()
 
-classes_to_labels_translation = trainer.idx_to_class_mapping
+
+# themral_model = ModelRepo.registry[args.model_name](args.num_target_classes)
+# trainer = ImageMultiClassTrainer.load_from_checkpoint(args.ckpt_path,model = themral_model) # will be only used for its hyperparameters 
+# themral_model = trainer.model
+# themral_model.eval()
+# classes_to_labels_translation = trainer.idx_to_class_mapping
+
+thermal_model, class2idx = load_model(ModelRepo.registry[args.model_name], args.ckpt_path)
+classes_to_labels_translation = {index: class_name for class_name, index in class2idx.items()}
+
 
 bboxes_df = pd.read_csv(args.video_bboxes_path,index_col=0)
 
@@ -72,12 +88,13 @@ while True:
             frame_related_bbox = frame_related_bboxes[i,:]
             frame_related_bbox = BoundingBox.from_coco(*pbx.convert_bbox(frame_related_bbox,from_type=args.bbox_format,to_type='coco'))
             x0,y0,x1,y1 = frame_related_bbox.to_voc().raw_values
-            croped_frame = frame[y0:y1,x0:x1].float().div(255.0)
-            frame_crops_according_to_bboxes.append(croped_frame)
+            croped_frame = frame[:, y0: y1, x0: x1].float().div(255.0)
+            sample = ImageSample(image=croped_frame, label=None)
+            frame_crops_according_to_bboxes.append(sample)
         
-        crops_ready_to_model = list(map(lambda crop: transfrom(crop),frame_crops_according_to_bboxes))
+        crops_ready_to_model = list(map(lambda sample: transfrom(sample).image, frame_crops_according_to_bboxes))
         batch = torch.stack(crops_ready_to_model,axis=0).to(device)
-        preds = torch.argmax(themral_model(batch),dim=1)
+        preds = torch.argmax(thermal_model(batch), dim=1)
         predictions.extend(list(preds.cpu().detach().tolist()))
         
 predictions_to_class_str = list(map(lambda x: classes_to_labels_translation[x],predictions))

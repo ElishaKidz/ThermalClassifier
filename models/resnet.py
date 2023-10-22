@@ -26,7 +26,7 @@ class resnet18(nn.Module):
         self.feature_extractor = nn.Sequential(*layers)
         self.dropout = nn.Dropout(p=p)
         self.classifier = nn.Linear(num_filters, self.num_target_classes)
-
+ 
     def forward(self, x):
         x = self.feature_extractor(x).flatten(1)
         x = self.dropout(x)
