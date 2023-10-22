@@ -6,7 +6,6 @@ import random
 from torchvision import transforms
 
 
-
 class ParseTextLabelsToDetections():
     def __init__(self,**kwargs):
         self.kwargs = kwargs
@@ -118,7 +117,6 @@ class SelectCropCoordinates:
 
         return w, h
 
-
 class CropImage():
     def __call__(self,sample:ImageSample):
         x0, y0, x1, y1 = sample.metadata['crop_coordinates'].to_voc().raw_values
@@ -130,22 +128,3 @@ class DetectionToClassificaton():
     
         sample.label = sample.metadata['chosed_class_idx']
         return sample
-
-        
-
-
-
-
-        
-
-    
-        
-
-
-        
-
-
-
-
-    
-
