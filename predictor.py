@@ -16,7 +16,7 @@ from PIL import Image
 from torchvision.transforms.functional import pil_to_tensor
 
 def load_model(model_class, ckpt):
-    torch_dict = torch.load(ckpt)
+    torch_dict = torch.load(ckpt,map_location='cpu')
     state_dict = {key.replace("model.", "") : value for key, value in torch_dict["state_dict"].items()}     
     class2idx = torch_dict['hyper_parameters']["class2idx"]
     # TODO we need to save idx2class
@@ -58,15 +58,16 @@ video_cap = utils.create_video_capture(args.video_path)
 # themral_model = trainer.model
 # themral_model.eval()
 # classes_to_labels_translation = trainer.idx_to_class_mapping
-
+device = 'cpu' if args.device is None else torch.device(f'cuda:{args.device}')
 thermal_model, class2idx = load_model(ModelRepo.registry[args.model_name], args.ckpt_path)
+thermal_model.to(device)
+thermal_model.eval()
 classes_to_labels_translation = {index: class_name for class_name, index in class2idx.items()}
 
 
 bboxes_df = pd.read_csv(args.video_bboxes_path,index_col=0)
 
-transfrom = Model2Transforms[args.model_mame]
-device = 'cpu' if args.device is None else torch.device(f'cuda:{args.device}')
+transfrom = Model2Transforms.registry[args.model_name]()
 predictions = []
 while True:
         frame_num = video_cap.get(cv.CAP_PROP_POS_FRAMES)
