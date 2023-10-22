@@ -1,5 +1,3 @@
-from typing import Dict, Union, List, Tuple, Optional, Any
-from torch import Tensor
 import pytorch_lightning as pl
 import torch.nn as nn
 import torch
@@ -7,53 +5,74 @@ from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall
 
 class ImageMultiClassTrainer(pl.LightningModule):
-    def __init__(self, num_target_classes, model, learning_rate = 1e-3,idx_to_class_mapping:dict = None):
+    def __init__(self, class2idx, model, learning_rate = 1e-3):
         super().__init__()
-        self.num_target_classes = num_target_classes
+        self.num_target_classes = len(class2idx)
+        self.class2idx = class2idx
         self.model = model
-        self.loss = nn.CrossEntropyLoss()
         self.learning_rate = learning_rate
-        self.idx_to_class_mapping = idx_to_class_mapping
-        self.save_hyperparameters(ignore='model')
+        self.loss = nn.CrossEntropyLoss()
 
         metrics = MetricCollection([
-            MulticlassAccuracy(self.num_target_classes), 
+            MulticlassAccuracy(self.num_target_classes, average=None), 
             MulticlassPrecision(self.num_target_classes), 
             MulticlassRecall(self.num_target_classes)
         ])
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.valid_metrics = metrics.clone(prefix='val_')
+
+        self.metrices = {
+            'train': metrics.clone(prefix='train_'),
+            'val': metrics.clone(prefix='val_'),
+            'test': metrics.clone(prefix='test_')
+
+        }
+        self.save_hyperparameters(ignore=['metrices', 'model'])
+
+    def shared_step(self, batch, batch_idx, split):
+        imgs, labels = batch
+        logits = self.model(imgs)
+        loss = self.loss(logits, labels)
+        
+        self.metrices[split](logits.cpu(), labels.cpu())
+        
+        return loss
+
+    def log_metrices(self, split):
+        metrices = self.metrices[split].compute()
+        
+        accuracy_per_class = metrices.pop(f"{split}_MulticlassAccuracy")
+        accuracy_dict = {f"{split}_{class_name}_acc": accuracy_per_class[i] 
+                     for i, class_name in enumerate(self.class2idx.keys())}
+        
+        accuracy_dict[f"{split}_MulticlassAccuracy"] = accuracy_per_class.mean()
+
+        self.log_dict(accuracy_dict, logger=True, on_step=False, on_epoch=True)
+        self.log_dict(metrices, logger=True, on_step=False, on_epoch=True)
+
+        # remember to reset metrics at the end of the epoch
+        self.metrices[split].reset()
+
 
     def training_step(self, batch, batch_idx):
-        imgs_batch , labels_batch = batch
-        logits_batch = self.model(imgs_batch)
-        
-        loss = self.loss(logits_batch, labels_batch)
-        
-        self.train_metrics.update(logits_batch, labels_batch)
+        loss = self.shared_step(batch, batch_idx, 'train')
         self.log('train_loss', loss.item(), on_step=False, on_epoch=True, logger=True)
         return loss
 
     def on_train_epoch_end(self) -> None:
-        metrices = self.train_metrics.compute()
-        self.log_dict(metrices, prog_bar=True, logger=True, on_step=False, on_epoch=True)
-        # remember to reset metrics at the end of the epoch
-        self.train_metrics.reset()
+        self.log_metrices('train')
 
     def validation_step(self, batch, batch_idx):
-        imgs_batch , labels_batch = batch
-        logits_batch = self.model(imgs_batch)
-        
-        loss = self.loss(logits_batch,labels_batch)
-        
-        self.valid_metrics.update(logits_batch, labels_batch)
-        self.log('val_loss', loss.item(), on_step=False, on_epoch=True)
+        loss = self.shared_step(batch, batch_idx, 'val')
+        self.log('val_loss', loss.item(), on_step=False, on_epoch=True, logger=True)
     
     def on_validation_epoch_end(self):
-        metrices = self.valid_metrics.compute()
-        self.log_dict(metrices, prog_bar=True, logger=True, on_step=False, on_epoch=True)
-        # remember to reset metrics at the end of the epoch
-        self.valid_metrics.reset()
-                
+        self.log_metrices('val')
+    
+    def test_step(self, batch, batch_idx):
+        loss = self.shared_step(batch, batch_idx, 'test')
+        self.log('test_loss', loss.item(), on_step=False, on_epoch=True, logger=True)
+
+    def on_test_epoch_end(self):
+        self.log_metrices('test')
+
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.learning_rate)

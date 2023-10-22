@@ -4,6 +4,8 @@ from typing import Tuple
 from pybboxes import BoundingBox
 from torchvision.transforms.functional import pil_to_tensor
 import random
+from torchvision import transforms
+
 
 
 class ParseTextLabelsToDetections():
@@ -14,6 +16,14 @@ class ParseTextLabelsToDetections():
         
         assert type(sample.label) == str, ValueError(f'The type of the label is not str but {type(sample.label)}')
         sample.label = Detections.parse_from_text(sample.label, **self.kwargs)
+        return sample
+
+class ToTensor():
+    def __init__(self) -> None:
+        self.transform = transforms.ToTensor()
+
+    def __call__(self, sample: ImageSample):
+        sample.image = self.transform(sample.image)
         return sample
 
 
