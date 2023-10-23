@@ -10,14 +10,8 @@ from args import args
 # TODO need to create func that can take class and can map to multi original classes !
 
 # mapping the index from old dataset to the classes we want
-classes = ['Person', 'Car', 'OtherVehicle']
-new_class2index = {name: i for i, name in enumerate(classes)}
-
-original_class2index = datasets_data[args.dataset_name]["CLASS_TO_IDX"]
-
-# convert the old class id to new class id
-class_mapper = {old_idx: new_class2index[class_name] for class_name, old_idx in original_class2index.items() 
-                                                if class_name in classes}
+classes = ['person', 'car',]
+new_class2index = {name.lower(): i for i, name in enumerate(classes)}
 
 if args.add_background_label:
     new_class2index['BACKGROUND'] = len(classes)
@@ -27,8 +21,7 @@ if args.add_background_label:
 
 data_module = GenericDataModule(root_dir=args.root_data_dir, 
                             dataset_name=args.dataset_name,
-                            class2idx=new_class2index, 
-                            class_mapper=class_mapper)
+                            class2idx=new_class2index)
 
 model = resnet18(num_target_classes=len(classes))
 lightning_model = ImageMultiClassTrainer(class2idx=new_class2index, model=model)
@@ -44,7 +37,7 @@ wandb_logger = WandbLogger(project="VMD-classifier")
 
 
 trainer = pl.Trainer(default_root_dir=f"gcs://soi-models/VMD-classifier/{args.exp_name}",
-                    accelerator='gpu',
+                    accelerator='auto',
                     callbacks=callbacks,
                     logger=wandb_logger,
                     max_epochs=100)

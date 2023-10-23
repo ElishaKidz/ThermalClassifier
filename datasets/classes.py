@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from PIL import Image
+import PIL
 from pybboxes import BoundingBox
 from typing import Union
 import numpy as np
@@ -23,7 +24,7 @@ class Detections:
 
     @classmethod
     # fields_sep=' ',image_size=(640, 512)
-    def parse_from_text(cls, txt:str, class_mapper: dict, line_sep='\n', fields_sep=' ', image_size=(640,512)):
+    def parse_from_text(cls, txt:str, class_mapper: dict, line_sep='\n', fields_sep=' ', image_size=(640, 512)):
         detections = {}
 
         for detection_txt in txt.split(line_sep):
@@ -56,18 +57,15 @@ class Detections:
 
 @dataclass
 class ImageSample():
-    image: Union[np.array, torch.Tensor]
-    label: Union[int, str, Detections, None]
+    image: Union[np.array, torch.Tensor, Image.Image]
+    bbox: BoundingBox
+    label: int
     metadata = {}
 
     @classmethod
     # Notice that the default parser is and gray scale parser
-    def from_paths(cls, image_path, label_path, class_mapper):
+    def create(cls, image_path, bbox, label):
         image =  Image.open(image_path).convert("RGB")
-
-        with open(label_path, 'r') as file:
-            label = file.read()
-        
-        label = Detections.parse_from_text(label, class_mapper)
-
-        return cls(image,label)
+        bbox = BoundingBox.from_coco(*bbox, image_size=image.size)
+ 
+        return cls(image, bbox, label)

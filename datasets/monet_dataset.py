@@ -1,19 +1,20 @@
-from transforms import hit_uav_transforms
-from torch.utils.data import Dataset
 import torch
+from torch.utils.data import Dataset
 from .classes import ImageSample
+from . import datasets_data
 from pycocotools.coco import COCO
+from transforms import monet_transforms
 
-class HitUavDataset(Dataset):
-    def __init__(self, 
-                data_root_dir: str, 
+class MONETDataset(Dataset):
+    def __init__(self,
+                data_root_dir: str,
                 class2idx: dict, 
                 split: str) -> None:
         
         self.data_root_dir = data_root_dir
-        self.transforms = hit_uav_transforms(split, class2idx)
+        self.transforms = monet_transforms(split, class2idx)
 
-        data = COCO(f"{data_root_dir}/hit-uav/{split}.json")
+        data = COCO(f"{data_root_dir}/MONET/dirtroad/{split}.json")
         
         self.class_mapper = self.create_class_mapper(data.cats, class2idx)
 
@@ -32,7 +33,6 @@ class HitUavDataset(Dataset):
         return {old_idx: class2idx[class_name] for class_name, old_idx in old_class2idx.items() 
                                                 if class_name in class2idx.keys()}
 
-
     def __len__(self):
         return len(self.anns_ids)
 
@@ -42,10 +42,10 @@ class HitUavDataset(Dataset):
         ann_id = self.anns_ids[idx]
         
         bbox = self.anns_dict[ann_id]['bbox']
-        label = self.class_mapper[self.anns_dict[ann_id]['category_id']]
+        label = self.class_mapper(self.anns_dict[ann_id]['category_id'])
     
         image_id = self.anns_dict[ann_id]['image_id']
-        image_path = f"{self.data_root_dir}/hit-uav/{self.imgs_dict[image_id]['file_name']}"
+        image_path = f"{self.data_root_dir}/MONET/{self.imgs_dict[image_id]['file_name']}"
         
         sample = ImageSample.create(image_path, bbox, label)
 
