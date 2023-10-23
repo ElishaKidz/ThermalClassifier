@@ -3,9 +3,9 @@ from pathlib import Path
 from . import datasets_data
 
 
-def download_hit_uav_dataset(root_dir):
-    bucket_name = datasets_data['hit-uav']['BUCKET_NAME']
-    dataset_name = datasets_data['hit-uav']['DATASET_NAME']
+def download_dataset(root_dir, dataset_name):
+    bucket_name = datasets_data[dataset_name]['BUCKET_NAME']
+    dataset_name = datasets_data[dataset_name]['DATASET_NAME']
 
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)
@@ -22,7 +22,3 @@ def download_hit_uav_dataset(root_dir):
             continue
         (root_dir/relative_dir).mkdir(parents=True, exist_ok=True)
         blob.download_to_filename(final_file_local_path)
-
-download_funcs = {
-    'hit-uav': download_hit_uav_dataset
-}

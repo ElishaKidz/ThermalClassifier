@@ -9,6 +9,7 @@ class ImageMultiClassTrainer(pl.LightningModule):
         super().__init__()
         self.num_target_classes = len(class2idx)
         self.class2idx = class2idx
+        self.idx2class = {v: k for k, v in class2idx.items()}
         self.model = model
         self.learning_rate = learning_rate
         self.loss = nn.CrossEntropyLoss()
