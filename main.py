@@ -40,7 +40,8 @@ trainer = pl.Trainer(default_root_dir=f"gcs://soi-models/VMD-classifier/{args.ex
                     accelerator='auto',
                     callbacks=callbacks,
                     logger=wandb_logger,
-                    max_epochs=100)
+                    limit_train_batches=25,
+                    max_epochs=5)
 
 trainer.fit(lightning_model, datamodule=data_module)
 

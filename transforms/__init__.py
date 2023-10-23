@@ -6,10 +6,10 @@ from torchvision.transforms import Compose
 def hit_uav_transforms(split, class2idx):
     deterministic = False if split == 'train' else True
     return Compose([ToTensor(),
-                    SampleBackground(class2idx, deterministic, p=0.3),
-                    #DownSampleImage(down_scale_factor=0.7),
+                    SampleBackground(class2idx, deterministic, p=0.1),
+                    # DownSampleImage(down_scale_factor=0.7),
                     AddShape(),
-                    SelectCropCoordinates(area_scale=[0.8, 2], ratio=[1, 1.5], deterministic=deterministic),
+                    SelectCropCoordinates(area_scale=[0.5, 2], ratio=[1, 1.5], deterministic=deterministic),
                     CropImage(),
                     PreapareToResnet()
                     ])
@@ -17,10 +17,10 @@ def hit_uav_transforms(split, class2idx):
 def monet_transforms(split, class2idx):
     deterministic = False if split == 'train' else True
     return Compose([ToTensor(),
-                    SampleBackground(class2idx, deterministic, p=0.3),
+                    SampleBackground(class2idx, deterministic, p=0.2),
                     # DownSampleImage(down_scale_factor=0.7),
                     AddShape(),
-                    SelectCropCoordinates(area_scale=[0.8, 2], ratio=[1, 1.5], deterministic=deterministic),
+                    SelectCropCoordinates(area_scale=[0.5, 2], ratio=[1, 1.5], deterministic=deterministic),
                     CropImage(),
                     PreapareToResnet()
                     ])

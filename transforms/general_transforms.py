@@ -37,7 +37,7 @@ class SampleBackground():
             np.random.seed(42)
 
     def __call__(self, sample: ImageSample):
-        if random.random() < 0.3:
+        if random.random() < self.p:
             sample.bbox = None
             sample.label = self.class2idx['BACKGROUND']
         

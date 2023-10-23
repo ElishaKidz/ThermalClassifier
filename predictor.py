@@ -7,11 +7,9 @@ import utils
 import cv2 as cv
 from pybboxes import BoundingBox
 import pybboxes as pbx
-from transforms.prepare_to_models import Model2Transforms
 import torch
 import logging
 from PIL import Image
-from torchvision.transforms.functional import pil_to_tensor
 import gcsfs
 from transforms import inference_transforms
 
@@ -30,7 +28,7 @@ def load_model(model_class, ckpt):
 parser = ArgumentParser()
 parser.add_argument('--video_path',type=str)
 parser.add_argument('--video_bboxes_path', type=str)
-parser.add_argument('--ckpt_path',type = str,default='gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=55-step=3528.ckpt')
+parser.add_argument('--ckpt_path',type = str,default='gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=3-step=100-v2.ckpt')
 parser.add_argument('--model_name',default='resnet18',type=str)
 parser.add_argument('--num_target_classes',type=int,default=4)
 
@@ -83,7 +81,7 @@ while True:
             frame_related_bbox = BoundingBox.from_coco(*pbx.convert_bbox(frame_related_bbox,from_type=args.bbox_format,to_type='coco'))
             x0, y0, x1, y1 = frame_related_bbox.to_voc().raw_values
             #croped_frame = frame[:, y0: y1, x0: x1].float().div(255.0)
-            sample = ImageSample(image=frame, label=None)
+            sample = ImageSample(image=frame, label=None, bbox=None)
             sample.metadata = {'crop_coordinates': [x0, y0, x1, y1]}
             frame_crops_according_to_bboxes.append(sample)
         

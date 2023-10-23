@@ -58,8 +58,8 @@ class Detections:
 @dataclass
 class ImageSample():
     image: Union[np.array, torch.Tensor, Image.Image]
-    bbox: BoundingBox
-    label: int
+    bbox: Union[BoundingBox, None]
+    label: Union[int, None]
     metadata = {}
 
     @classmethod
