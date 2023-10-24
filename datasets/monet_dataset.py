@@ -1,7 +1,6 @@
 import torch
 from torch.utils.data import Dataset
 from .classes import ImageSample
-from . import datasets_data
 from pycocotools.coco import COCO
 from transforms import monet_transforms
 
@@ -42,7 +41,7 @@ class MONETDataset(Dataset):
         ann_id = self.anns_ids[idx]
         
         bbox = self.anns_dict[ann_id]['bbox']
-        label = self.class_mapper(self.anns_dict[ann_id]['category_id'])
+        label = self.class_mapper[self.anns_dict[ann_id]['category_id']]
     
         image_id = self.anns_dict[ann_id]['image_id']
         image_path = f"{self.data_root_dir}/MONET/{self.imgs_dict[image_id]['file_name']}"

@@ -18,7 +18,8 @@ class Model2Transforms:
 class PreapareToResnet():
     def __init__(self) -> None:
         self.img_transfomrs = transforms.Compose([
-            transforms.Resize((72, 90), antialias=False),
+            # 72, 90
+            transforms.Resize((64, 64), antialias=False),
             #transforms.CenterCrop(224),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 

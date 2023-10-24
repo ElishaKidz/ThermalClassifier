@@ -12,9 +12,9 @@ class GenericDataModule(pl.LightningDataModule):
                 train_batch_size: int = 128, 
                 val_batch_size: int = 128,
                 test_batch_size: int = 128,
-                train_num_workers: int = 4,
-                val_num_workers: int = 4,
-                test_num_workers: int = 4) -> None:
+                train_num_workers: int = 8,
+                val_num_workers: int = 8,
+                test_num_workers: int = 8) -> None:
 
         super().__init__()
 

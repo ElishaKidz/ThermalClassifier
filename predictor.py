@@ -28,7 +28,8 @@ def load_model(model_class, ckpt):
 parser = ArgumentParser()
 parser.add_argument('--video_path',type=str)
 parser.add_argument('--video_bboxes_path', type=str)
-parser.add_argument('--ckpt_path',type = str,default='gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=3-step=100-v2.ckpt')
+# gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=13-step=1512.ckpt
+parser.add_argument('--ckpt_path',type = str,default='gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=10-step=1188.ckpt')
 parser.add_argument('--model_name',default='resnet18',type=str)
 parser.add_argument('--num_target_classes',type=int,default=4)
 

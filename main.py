@@ -10,7 +10,7 @@ from args import args
 # TODO need to create func that can take class and can map to multi original classes !
 
 # mapping the index from old dataset to the classes we want
-classes = ['person', 'car',]
+classes = ['person', 'car']
 new_class2index = {name.lower(): i for i, name in enumerate(classes)}
 
 if args.add_background_label:
@@ -27,8 +27,8 @@ model = resnet18(num_target_classes=len(classes))
 lightning_model = ImageMultiClassTrainer(class2idx=new_class2index, model=model)
 
 checkpoint_callback = ModelCheckpoint(dirpath=f"gcs://soi-models/VMD-classifier/{args.exp_name}/checkpoints",
-                                    monitor='val_MulticlassAccuracy',
-                                    mode='max',
+                                    monitor='val_loss',
+                                    mode='min',
                                     verbose=True)
 
 callbacks = [checkpoint_callback]
@@ -40,8 +40,7 @@ trainer = pl.Trainer(default_root_dir=f"gcs://soi-models/VMD-classifier/{args.ex
                     accelerator='auto',
                     callbacks=callbacks,
                     logger=wandb_logger,
-                    limit_train_batches=25,
-                    max_epochs=5)
+                    max_epochs=20)
 
 trainer.fit(lightning_model, datamodule=data_module)
 

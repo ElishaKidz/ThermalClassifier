@@ -4,7 +4,7 @@ from typing import Tuple
 from pybboxes import BoundingBox
 import random
 from torchvision import transforms
-from torchvision.transforms.functional import resize
+from torchvision.transforms.functional import resize, hflip
 
 
 class DownSampleImage():
@@ -27,6 +27,14 @@ class ToTensor():
         sample.image = self.transform(sample.image)
         return sample
 
+class RandomHorizontalFlip():
+    def __init__(self, p: float = 0.3) -> None:
+        self.p = p
+
+    def __call__(self, sample: ImageSample):
+        if random.random() < self.p:
+            sample.image = hflip(sample.image)
+        return sample
 
 class SampleBackground():
     def __init__(self, class2idx: dict, deterministic: bool = False, p: float = 0.3) -> None:
@@ -38,7 +46,6 @@ class SampleBackground():
 
     def __call__(self, sample: ImageSample):
         if random.random() < self.p:
-            sample.bbox = None
             sample.label = self.class2idx['BACKGROUND']
         
         return sample
@@ -50,8 +57,9 @@ class AddShape():
         return sample
     
 class SelectCropCoordinates:
-    def __init__(self, area_scale:Tuple[float,float] = (1.0, 1.0), 
+    def __init__(self, class2idx: dict, area_scale: Tuple[float,float] = (1.0, 1.0), 
                     ratio:Tuple[float,float] = (1, 2), deterministic: bool = False) -> None:
+        self.class2idx = class2idx
         self.area_scale = area_scale
         self.ratio = ratio
 
@@ -61,14 +69,15 @@ class SelectCropCoordinates:
 
     def __call__(self, sample: ImageSample):
         W, H = sample.metadata["W"], sample.metadata["H"]
-        min_w_crop_size, min_h_crop_size = 10, 10
-        w_crop, h_crop = int(np.clip(np.random.exponential(30), min_w_crop_size, W)), int(np.clip(np.random.exponential(30), min_h_crop_size, H))
+        # min_w_crop_size, min_h_crop_size = 10, 10
+        # w_crop, h_crop = int(np.clip(np.random.exponential(30), min_w_crop_size, W)), int(np.clip(np.random.exponential(30), min_h_crop_size, H))
+        w_crop, h_crop = self.generate_crop_dimensions(sample.bbox.area)
         possible_sampling_range_x = (0, W - w_crop + 1)
         possible_sampling_range_y = (0, H - h_crop + 1)
 
-        if sample.bbox is not None:
+        if sample.label != self.class2idx['BACKGROUND']:
             # Select an augmented crop round the existing detection
-            w_crop, h_crop = self.generate_crop_dimensions(sample.bbox.area)
+            # w_crop, h_crop = self.generate_crop_dimensions(sample.bbox.area)
             x0_detection, y0_detection, w_detection, h_detection = sample.bbox.raw_values
             crop_w_larger = w_crop >= w_detection
             crop_h_larger = h_crop >= h_detection
@@ -78,8 +87,8 @@ class SelectCropCoordinates:
             possible_sampling_range_y = (y0_detection - (h_crop - h_detection), y0_detection) if crop_h_larger \
                                         else (y0_detection, y0_detection + (h_detection - h_crop))
             
-            possible_sampling_range_x = np.clip(possible_sampling_range_x, 0, W - w_crop)
-            possible_sampling_range_y = np.clip(possible_sampling_range_y, 0, H - h_crop)
+            possible_sampling_range_x = np.clip(possible_sampling_range_x, 0, W - w_crop).astype(int)
+            possible_sampling_range_y = np.clip(possible_sampling_range_y, 0, H - h_crop).astype(int)
         
         if len(set(possible_sampling_range_x)) > 1:
             x0 = np.random.randint(*possible_sampling_range_x)
