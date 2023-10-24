@@ -2,7 +2,6 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from data_module import GenericDataModule
 from lightning.pytorch.loggers import WandbLogger
-from datasets import datasets_data
 from image_multiclass_trainer import ImageMultiClassTrainer
 from models.resnet import resnet18
 from args import args
@@ -18,9 +17,9 @@ if args.add_background_label:
     classes.append('BACKGROUND')
 ###
 
-
+dataset_names_list = args.datasets_names.strip().split(",")
 data_module = GenericDataModule(root_dir=args.root_data_dir, 
-                            dataset_name=args.dataset_name,
+                            datasets_names=dataset_names_list,
                             class2idx=new_class2index)
 
 model = resnet18(num_target_classes=len(classes))
