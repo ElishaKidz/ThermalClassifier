@@ -56,9 +56,6 @@ class GenericDataModule(pl.LightningDataModule):
             datasets_list.append(dataset)
         return ConcatDataset(datasets_list)
         
-        
-
-
     def train_dataloader(self):
         return DataLoader(self.train_dataset, 
                           batch_size=self.train_batch_size, 
