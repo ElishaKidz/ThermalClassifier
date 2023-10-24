@@ -5,6 +5,7 @@ from lightning.pytorch.loggers import WandbLogger
 from image_multiclass_trainer import ImageMultiClassTrainer
 from models.resnet import resnet18
 from args import args
+from datasets.get_dataset import datasets_dict
 
 # TODO need to create func that can take class and can map to multi original classes !
 
@@ -18,6 +19,8 @@ if args.add_background_label:
 ###
 
 dataset_names_list = args.datasets_names.strip().split(",")
+assert all(dataset_name in datasets_dict for dataset_name in dataset_names_list), "one of the datasets is not supported"
+
 data_module = GenericDataModule(root_dir=args.root_data_dir, 
                             datasets_names=dataset_names_list,
                             class2idx=new_class2index)
