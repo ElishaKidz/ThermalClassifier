@@ -1,4 +1,3 @@
-import datasets.classes
 from .general_transforms import AddShape, ToTensor, DownSampleImage, ChoseDetection, CropImage, DetectionToClassificaton, SelectCropCoordinates
 from .prepare_to_models import PreapareToResnet
 from torchvision.transforms import Compose
