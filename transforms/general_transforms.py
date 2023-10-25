@@ -1,3 +1,4 @@
+import sys
 from ..datasets.classes import Detections, ImageSample, Detection
 import numpy as np
 from typing import Tuple
@@ -5,7 +6,6 @@ from pybboxes import BoundingBox
 import random
 from torchvision import transforms
 from torchvision.transforms.functional import resize
-
 
 class DownSampleImage():
     def __init__(self, down_scale_factor) -> None:
