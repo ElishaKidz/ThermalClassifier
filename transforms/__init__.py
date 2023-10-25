@@ -1,7 +1,7 @@
 from .general_transforms import AddShape, ToTensor, DownSampleImage, ChoseDetection, CropImage, DetectionToClassificaton, SelectCropCoordinates
 from .prepare_to_models import PreapareToResnet
 from torchvision.transforms import Compose
-
+import datasets
 
 def hit_uav_transforms(split, class2idx):
     deterministic = False if split == 'train' else True
