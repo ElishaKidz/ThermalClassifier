@@ -1,4 +1,4 @@
-from datasets.classes import Detections, ImageSample, Detection
+from ..datasets.classes import Detections, ImageSample, Detection
 import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox
