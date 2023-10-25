@@ -7,9 +7,7 @@ from models.resnet import resnet18
 from args import args
 from datasets.get_dataset import datasets_dict
 
-# TODO need to create func that can take class and can map to multi original classes !
 
-# mapping the index from old dataset to the classes we want
 classes = ['person', 'car']
 new_class2index = {name.lower(): i for i, name in enumerate(classes)}
 
@@ -18,11 +16,19 @@ if args.add_background_label:
     classes.append('BACKGROUND')
 ###
 
-dataset_names_list = args.datasets_names.strip().split(",")
-assert all(dataset_name in datasets_dict for dataset_name in dataset_names_list), "one of the datasets is not supported"
+train_datasets = args.train_datasets_names.strip().split(",")
+val_datasets = args.val_datasets_names.strip().split(",")
+test_datasets = args.test_datasets_names.strip().split(",")
+
+chosen_datasets = set(train_datasets + val_datasets + test_datasets)
+assert all(dataset_name in datasets_dict for dataset_name in chosen_datasets), "one of the datasets is not supported"
+
+
 
 data_module = GenericDataModule(root_dir=args.root_data_dir, 
-                            datasets_names=dataset_names_list,
+                            train_datasets_names=train_datasets,
+                            val_datasets_names=val_datasets,
+                            test_datasets_names=test_datasets,
                             class2idx=new_class2index)
 
 model = resnet18(num_target_classes=len(classes))

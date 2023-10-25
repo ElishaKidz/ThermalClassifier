@@ -1,4 +1,4 @@
-from datasets.classes import Detections, ImageSample, Detection
+from datasets.classes import ImageSample
 import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox
@@ -7,16 +7,19 @@ from torchvision import transforms
 from torchvision.transforms.functional import resize, hflip
 
 
-class DownSampleImage():
-    def __init__(self, down_scale_factor) -> None:
-        self.down_scale_factor = down_scale_factor
+class RandomDownSampleImage():
+    def __init__(self, down_scale_factor_range: list , p: float = 0.3) -> None:
+        self.down_scale_factor_range = down_scale_factor_range
+        self.p = p
 
     def __call__(self, sample: ImageSample):
-        # image size is [C, H, W] 
-        scale_size = int(min(sample.image.shape[1:]) * self.down_scale_factor)
-        sample.image = resize(sample.image, size=scale_size, antialias=False)
-        if isinstance(sample.bbox, BoundingBox):
-            sample.bbox.scale(self.down_scale_factor ** 2)
+        # image size is [C, H, W]
+        if random.random() < self.p:
+            down_scale_factor = random.uniform(*self.down_scale_factor_range)
+            scale_size = int(min(sample.image.shape[1:]) * down_scale_factor)
+            sample.image = resize(sample.image, size=scale_size, antialias=False)
+            # if isinstance(sample.bbox, BoundingBox):
+            sample.bbox.scale(down_scale_factor ** 2)
         return sample
 
 class ToTensor():

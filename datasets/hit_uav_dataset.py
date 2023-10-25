@@ -8,10 +8,11 @@ class HitUavDataset(Dataset):
     def __init__(self, 
                 data_root_dir: str, 
                 class2idx: dict, 
-                split: str) -> None:
+                split: str,
+                transforms = None) -> None:
         
         self.data_root_dir = data_root_dir
-        self.transforms = hit_uav_transforms(split, class2idx)
+        self.transforms = hit_uav_transforms(split, class2idx) if transforms is None else transforms
 
         data = COCO(f"{data_root_dir}/hit-uav/{split}.json")
         

@@ -7,19 +7,24 @@ from torch.utils.data import ConcatDataset
 
 class GenericDataModule(pl.LightningDataModule):
     def __init__(self, 
-                datasets_names: list,
+                train_datasets_names: list,
+                val_datasets_names: list,
+                test_datasets_names: list,
                 class2idx: dict,
                 root_dir: str,
-                train_batch_size: int = 128, 
-                val_batch_size: int = 128,
-                test_batch_size: int = 128,
+                train_batch_size: int = 256, 
+                val_batch_size: int = 256,
+                test_batch_size: int = 256,
                 train_num_workers: int = 8,
                 val_num_workers: int = 8,
                 test_num_workers: int = 8) -> None:
 
         super().__init__()
 
-        self.datasets_names = datasets_names
+        self.train_datasets_names = train_datasets_names
+        self.val_datasets_names = val_datasets_names
+        self.test_datasets_names = test_datasets_names
+        self.all_datasets_names = set(train_datasets_names + val_datasets_names + test_datasets_names)
         self.root_dir = Path(root_dir)
 
         self.class2idx = class2idx
@@ -34,22 +39,22 @@ class GenericDataModule(pl.LightningDataModule):
 
 
     def prepare_data(self):
-        for dataset_name in self.datasets_names:
+        for dataset_name in self.all_datasets_names:
             download_dataset(self.root_dir, dataset_name)
     
     def setup(self, stage: str) -> None:
         
         if stage == 'fit':
-            self.train_dataset = self.get_dataset('train')
+            self.train_dataset = self.get_dataset(self.train_datasets_names,'train')
             
-            self.val_dataset = self.get_dataset('val') 
+            self.val_dataset = self.get_dataset(self.val_datasets_names, 'val') 
 
         if stage == 'test':
-            self.test_dataset = self.get_dataset('test')
+            self.test_dataset = self.get_dataset(self.test_datasets_names, 'test')
 
-    def get_dataset(self, split):
+    def get_dataset(self, datasets_names, split):
         datasets_list = []
-        for dataset_name in self.datasets_names:
+        for dataset_name in datasets_names:
             dataset = datasets_dict[dataset_name](data_root_dir=self.root_dir,
                                                split=split,
                                                class2idx=self.class2idx)
