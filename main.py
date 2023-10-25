@@ -8,7 +8,7 @@ from args import args
 from datasets.get_dataset import datasets_dict
 
 
-classes = ['person', 'car']
+classes = ['person', 'vehicle']
 new_class2index = {name.lower(): i for i, name in enumerate(classes)}
 
 if args.add_background_label:
@@ -22,7 +22,6 @@ test_datasets = args.test_datasets_names.strip().split(",")
 
 chosen_datasets = set(train_datasets + val_datasets + test_datasets)
 assert all(dataset_name in datasets_dict for dataset_name in chosen_datasets), "one of the datasets is not supported"
-
 
 
 data_module = GenericDataModule(root_dir=args.root_data_dir, 
@@ -41,7 +40,6 @@ checkpoint_callback = ModelCheckpoint(dirpath=f"gcs://soi-models/VMD-classifier/
 
 callbacks = [checkpoint_callback]
 wandb_logger = WandbLogger(project="VMD-classifier")
-
 
 
 trainer = pl.Trainer(default_root_dir=f"gcs://soi-models/VMD-classifier/{args.exp_name}",

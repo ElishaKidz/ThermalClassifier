@@ -60,12 +60,13 @@ def sweep():
     
     trainer.fit(lightning_model, train_loader, val_loader)
     test_metrics = trainer.test(lightning_model, test_loader, ckpt_path='best', verbose=False)
+    test_metrics = test_metrics[0]
     wandb.log({
-        "val_loss": test_metrics['test_loss'],
-        "val_MulticlassAccuracy": test_metrics['test_MulticlassAccuracy'],
-        "val_background_acc": test_metrics['test_BACKGROUND_acc'],
-        "val_person_acc": test_metrics['test_person_acc'],
-        "val_car_acc": test_metrics['test_car_acc'],
+        "test_loss": test_metrics['test_loss'],
+        "test_MulticlassAccuracy": test_metrics['test_MulticlassAccuracy'],
+        "test_background_acc": test_metrics['test_BACKGROUND_acc'],
+        "test_person_acc": test_metrics['test_person_acc'],
+        "test_car_acc": test_metrics['test_car_acc'],
         "min_area_scale": config.min_area_scale,
         "max_area_scale": config.max_area_scale,
         "resnet_h_size": config.resnet_h_size,

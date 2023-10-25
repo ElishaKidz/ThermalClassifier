@@ -9,6 +9,7 @@ checkpoints/
 outputs/
 inputs/
 gcs:/
+sweeps/
 .out
 .vscode/
 # C extensions
