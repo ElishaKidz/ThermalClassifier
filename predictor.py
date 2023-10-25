@@ -1,14 +1,13 @@
 import torch
 import gcsfs
-from models.resnet import ModelRepo
+from .models.resnet import ModelRepo
 from SoiUtils.general import get_device
-from transforms import inference_transforms
+from .transforms import inference_transforms
 import pybboxes as pbx
 from pybboxes import BoundingBox
-from datasets.classes import ImageSample
+from .datasets.classes import ImageSample
 import numpy as np
 from PIL import Image
-
 class ThermalPredictior:
     FS = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
 
