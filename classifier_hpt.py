@@ -17,6 +17,7 @@ classes = ['person', 'car']
 new_class2index = {name.lower(): i for i, name in enumerate(classes)}
 new_class2index['BACKGROUND'] = len(classes)
 classes.append('BACKGROUND')
+data_root_dir = '/home/xd_eshaar_gcp_idf_il/data'
 
 def sweep():
     model = resnet18(num_target_classes=len(classes))
@@ -27,11 +28,11 @@ def sweep():
     train_transforms = hit_uav_transforms('train', new_class2index, area_scale, resnet_resize)
     val_transforms = hit_uav_transforms('val', new_class2index, area_scale, resnet_resize)
 
-    train_dataset = HitUavDataset(f"{os.getcwd()}/data", new_class2index, 
+    train_dataset = HitUavDataset(data_root_dir, new_class2index, 
                                   split="train", transforms=train_transforms)
-    val_dataset = HitUavDataset(f"{os.getcwd()}/data", new_class2index, 
+    val_dataset = HitUavDataset(data_root_dir, new_class2index, 
                                 split="val", transforms=val_transforms)
-    test_dataset = HitUavDataset(f"{os.getcwd()}/data", new_class2index, 
+    test_dataset = HitUavDataset(data_root_dir, new_class2index, 
                                 split="test", transforms=val_transforms)
 
 
@@ -80,8 +81,8 @@ if __name__ == "__main__":
         max_area_scale = 2,
         resnet_h_size = 64,
         resnet_w_size = 64,
-        optimizer = 'adam'
+        optimizer = 'sgd'
     )
-    wandb.init(config=hyperparameter_defaults, project="hit-uav-HPT")
+    wandb.init(config=hyperparameter_defaults, project="hit-uav-HPT-sgd")
     config = wandb.config
     sweep()
