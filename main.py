@@ -34,8 +34,8 @@ model = resnet18(num_target_classes=len(classes))
 lightning_model = ImageMultiClassTrainer(class2idx=new_class2index, model=model)
 
 checkpoint_callback = ModelCheckpoint(dirpath=f"gcs://soi-models/VMD-classifier/{args.exp_name}/checkpoints",
-                                    monitor='val_loss',
-                                    mode='min',
+                                    monitor='val_MulticlassAccuracy',
+                                    mode='max',
                                     verbose=True)
 
 callbacks = [checkpoint_callback]
@@ -43,10 +43,10 @@ wandb_logger = WandbLogger(project="VMD-classifier")
 
 
 trainer = pl.Trainer(default_root_dir=f"gcs://soi-models/VMD-classifier/{args.exp_name}",
-                    accelerator='auto',
+                    accelerator='gpu',
                     callbacks=callbacks,
                     logger=wandb_logger,
-                    max_epochs=20)
+                    max_epochs=40)
 
 trainer.fit(lightning_model, datamodule=data_module)
 

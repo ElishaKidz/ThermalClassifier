@@ -19,10 +19,11 @@ def monet_transforms(split, class2idx):
     deterministic = False if split == 'train' else True
     return Compose([ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),
-                    RandomDownSampleImage(down_scale_factor_range=[0.85, 1], p=0.3),
+                    # RandomDownSampleImage(down_scale_factor_range=[0.85, 1], p=0.3),
                     AddShape(),
                     SelectCropCoordinates(class2idx, area_scale=[0.5, 2], ratio=[1, 1.5], deterministic=deterministic),
                     CropImage(),
+                    RandomHorizontalFlip(p=0.5),
                     PreapareToResnet()
                     ])
 

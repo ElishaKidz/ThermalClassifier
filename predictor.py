@@ -29,7 +29,7 @@ parser = ArgumentParser()
 parser.add_argument('--video_path',type=str)
 parser.add_argument('--video_bboxes_path', type=str)
 # gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=13-step=1512.ckpt
-parser.add_argument('--ckpt_path',type = str,default='gs://soi-models/VMD-classifier/classifier-HPT/hit_uav_area_scale=[1, 1.5]_resnet_resize=(64, 64)_optimizer=sgd.ckpt')
+parser.add_argument('--ckpt_path',type = str,default='gcs://soi-models/VMD-classifier/debug_monet/checkpoints/epoch=20-step=4830.ckpt')
 parser.add_argument('--model_name',default='resnet18',type=str)
 parser.add_argument('--num_target_classes',type=int,default=4)
 

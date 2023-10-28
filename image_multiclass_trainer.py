@@ -34,7 +34,7 @@ class ImageMultiClassTrainer(pl.LightningModule):
         logits = self.model(imgs)
         loss = self.loss(logits, labels)
         
-        self.metrices[split](logits.cpu(), labels.cpu())
+        self.metrices[split](logits.detach().cpu(), labels.detach().cpu())
         
         return loss
 

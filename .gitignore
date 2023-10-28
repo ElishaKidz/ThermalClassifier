@@ -10,7 +10,7 @@ outputs/
 inputs/
 gcs:/
 sweeps/
-.out
+*.out
 .vscode/
 # C extensions
 *.so
