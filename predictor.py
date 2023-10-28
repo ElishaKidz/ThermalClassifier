@@ -1,13 +1,15 @@
 import torch
 import gcsfs
-from .models.resnet import ModelRepo
+from models.resnet import ModelRepo
 from SoiUtils.general import get_device
-from .transforms import inference_transforms
+from transforms import inference_transforms
 import pybboxes as pbx
 from pybboxes import BoundingBox
-from .datasets.classes import ImageSample
+from datasets.classes import ImageSample
 import numpy as np
 from PIL import Image
+
+
 class ThermalPredictior:
     FS = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
 
@@ -47,7 +49,8 @@ class ThermalPredictior:
         
         crops_ready_to_model = list(map(lambda sample: self.transforms(sample).image, frame_crops_according_to_bboxes))
         batch = torch.stack(crops_ready_to_model,axis=0).to(self.device)
-        preds = torch.argmax(self.model(batch), dim=1).cpu().detach().tolist()
+        logits, _ = self.model(batch)
+        preds = torch.argmax(logits, dim=1).cpu().detach().tolist()
         translated_preds = list(map(lambda x: self.classes_to_labels_translation[x],preds))
         
         

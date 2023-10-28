@@ -1,11 +1,10 @@
-import sys
-from ..datasets.classes import ImageSample
+from datasets.classes import ImageSample
 import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox
 import random
 from torchvision import transforms
-from torchvision.transforms.functional import resize, hflip
+from torchvision.transforms.functional import resize, hflip, vflip, rotate
 
 
 class RandomDownSampleImage():
@@ -32,12 +31,30 @@ class ToTensor():
         return sample
 
 class RandomHorizontalFlip():
-    def __init__(self, p: float = 0.3) -> None:
+    def __init__(self, p: float) -> None:
         self.p = p
 
     def __call__(self, sample: ImageSample):
         if random.random() < self.p:
             sample.image = hflip(sample.image)
+        return sample
+
+class RandomVerticalFlip():
+    def __init__(self, p: float) -> None:
+        self.p = p
+
+    def __call__(self, sample: ImageSample):
+        if random.random() < self.p:
+            sample.image = vflip(sample.image)
+        return sample
+
+class RandomRotation():
+    def __init__(self, degrees: tuple) -> None:
+        self.degrees = degrees
+
+    def __call__(self, sample: ImageSample):
+        angle = np.random.randint(*self.degrees)
+        sample.image = rotate(sample.image, angle)
         return sample
 
 class SampleBackground():

@@ -1,4 +1,5 @@
-from .general_transforms import AddShape, ToTensor, RandomDownSampleImage, RandomHorizontalFlip, SampleBackground, CropImage, SelectCropCoordinates
+from .general_transforms import AddShape, ToTensor, RandomHorizontalFlip, RandomVerticalFlip, RandomRotation, \
+                                    RandomDownSampleImage, SampleBackground, CropImage, SelectCropCoordinates
 from .prepare_to_models import PreapareToResnet
 from torchvision.transforms import Compose
 
@@ -12,6 +13,8 @@ def hit_uav_transforms(split, class2idx, area_scale=[1, 2], resnet_resize=(72, 7
                     SelectCropCoordinates(class2idx, area_scale, ratio=[1, 1.5], deterministic=deterministic),
                     CropImage(),
                     RandomHorizontalFlip(p=0.5),
+                    RandomVerticalFlip(p=0.5),
+                    RandomRotation(degrees=(0, 45)),
                     PreapareToResnet(resnet_resize)
                     ])
 
