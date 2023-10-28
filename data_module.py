@@ -1,29 +1,33 @@
 import pytorch_lightning as pl
 from pathlib import Path
 from torch.utils.data import DataLoader
-from datasets.download_dataset import download_funcs
+from datasets.download_dataset import download_dataset
 from datasets.get_dataset import datasets_dict
+from torch.utils.data import ConcatDataset
 
 class GenericDataModule(pl.LightningDataModule):
     def __init__(self, 
-                dataset_name: str,
+                train_datasets_names: list,
+                val_datasets_names: list,
+                test_datasets_names: list,
                 class2idx: dict,
                 root_dir: str,
-                class_mapper: dict,
-                train_batch_size: int = 32, 
-                val_batch_size: int = 32,
-                test_batch_size: int = 32,
-                train_num_workers: int = 2,
-                val_num_workers: int = 2,
-                test_num_workers: int = 2) -> None:
+                train_batch_size: int = 256, 
+                val_batch_size: int = 256,
+                test_batch_size: int = 256,
+                train_num_workers: int = 8,
+                val_num_workers: int = 8,
+                test_num_workers: int = 8) -> None:
 
         super().__init__()
 
-        self.dataset_name = dataset_name
+        self.train_datasets_names = train_datasets_names
+        self.val_datasets_names = val_datasets_names
+        self.test_datasets_names = test_datasets_names
+        self.all_datasets_names = set(train_datasets_names + val_datasets_names + test_datasets_names)
         self.root_dir = Path(root_dir)
 
         self.class2idx = class2idx
-        self.class_mapper = class_mapper
 
         # dataloader params
         self.train_batch_size = train_batch_size
@@ -35,27 +39,28 @@ class GenericDataModule(pl.LightningDataModule):
 
 
     def prepare_data(self):
-        download_funcs[self.dataset_name](self.root_dir)
+        for dataset_name in self.all_datasets_names:
+            download_dataset(self.root_dir, dataset_name)
     
     def setup(self, stage: str) -> None:
         
         if stage == 'fit':
-            self.train_dataset = datasets_dict[self.dataset_name](data_root_dir=self.root_dir,
-                                               split="train",
-                                               class2idx=self.class2idx,
-                                               class_mapper=self.class_mapper)
+            self.train_dataset = self.get_dataset(self.train_datasets_names,'train')
             
-            self.val_dataset = datasets_dict[self.dataset_name](data_root_dir=self.root_dir,
-                                                    split="val",
-                                                    class2idx=self.class2idx,
-                                                    class_mapper=self.class_mapper) 
+            self.val_dataset = self.get_dataset(self.val_datasets_names, 'val') 
 
         if stage == 'test':
-            self.test_dataset = datasets_dict[self.dataset_name](data_root_dir=self.root_dir,
-                                              split="test",
-                                              class2idx=self.class2idx,
-                                              class_mapper=self.class_mapper)
+            self.test_dataset = self.get_dataset(self.test_datasets_names, 'test')
 
+    def get_dataset(self, datasets_names, split):
+        datasets_list = []
+        for dataset_name in datasets_names:
+            dataset = datasets_dict[dataset_name](data_root_dir=self.root_dir,
+                                               split=split,
+                                               class2idx=self.class2idx)
+            datasets_list.append(dataset)
+        return ConcatDataset(datasets_list)
+        
     def train_dataloader(self):
         return DataLoader(self.train_dataset, 
                           batch_size=self.train_batch_size, 

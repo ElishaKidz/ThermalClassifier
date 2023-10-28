@@ -41,7 +41,7 @@ class ThermalPredictior:
             frame_related_bbox = BoundingBox.from_coco(*pbx.convert_bbox(frame_related_bbox,from_type=bboxes_format,to_type='coco'))
             x0, y0, x1, y1 = frame_related_bbox.to_voc().raw_values
             #croped_frame = frame[:, y0: y1, x0: x1].float().div(255.0)
-            sample = ImageSample(image=frame, label=None)
+            sample = ImageSample(image=frame, label=None, bbox=None)
             sample.metadata = {'crop_coordinates': [x0, y0, x1, y1]}
             frame_crops_according_to_bboxes.append(sample)
         

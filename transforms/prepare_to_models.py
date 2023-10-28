@@ -16,12 +16,12 @@ class Model2Transforms:
 
 @Model2Transforms.register(name='resnet18')
 class PreapareToResnet():
-    def __init__(self) -> None:
+    def __init__(self, resize_shape: tuple = (72, 72)) -> None:
         self.img_transfomrs = transforms.Compose([
-            transforms.Resize((72, 90), antialias=False),
-            #transforms.CenterCrop(224),
+            # 72, 90
+            transforms.Resize(resize_shape, antialias=False),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     def __call__(self, sample: ImageSample):
-        sample.image =  self.img_transfomrs(sample.image)
+        sample.image = self.img_transfomrs(sample.image)
         return sample

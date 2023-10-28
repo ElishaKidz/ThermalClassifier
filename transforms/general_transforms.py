@@ -1,22 +1,26 @@
 import sys
-from ..datasets.classes import Detections, ImageSample, Detection
+from ..datasets.classes import ImageSample
 import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox
 import random
 from torchvision import transforms
-from torchvision.transforms.functional import resize
+from torchvision.transforms.functional import resize, hflip
 
-class DownSampleImage():
-    def __init__(self, down_scale_factor) -> None:
-        self.down_scale_factor = down_scale_factor
+
+class RandomDownSampleImage():
+    def __init__(self, down_scale_factor_range: list , p: float = 0.3) -> None:
+        self.down_scale_factor_range = down_scale_factor_range
+        self.p = p
 
     def __call__(self, sample: ImageSample):
-        # image size is [C, H, W] 
-        scale_size = int(min(sample.image.shape[1:]) * self.down_scale_factor)
-        sample.image = resize(sample.image, size=scale_size, antialias=False)
-        if isinstance(sample.label, Detection):
-            sample.label.bbox.scale(self.down_scale_factor ** 2)
+        # image size is [C, H, W]
+        if random.random() < self.p:
+            down_scale_factor = random.uniform(*self.down_scale_factor_range)
+            scale_size = int(min(sample.image.shape[1:]) * down_scale_factor)
+            sample.image = resize(sample.image, size=scale_size, antialias=False)
+            # if isinstance(sample.bbox, BoundingBox):
+            sample.bbox.scale(down_scale_factor ** 2)
         return sample
 
 class ToTensor():
@@ -27,33 +31,26 @@ class ToTensor():
         sample.image = self.transform(sample.image)
         return sample
 
+class RandomHorizontalFlip():
+    def __init__(self, p: float = 0.3) -> None:
+        self.p = p
 
-class ChoseDetection():
-    def __init__(self, class2idx: dict, deterministic: bool = False, allow_background: bool = True) -> None:
+    def __call__(self, sample: ImageSample):
+        if random.random() < self.p:
+            sample.image = hflip(sample.image)
+        return sample
+
+class SampleBackground():
+    def __init__(self, class2idx: dict, deterministic: bool = False, p: float = 0.3) -> None:
         self.class2idx = class2idx
-        self.allow_background = allow_background
+        self.p = p
 
         if deterministic:
             np.random.seed(42)
 
-
-    def __call__(self,sample:ImageSample):
-        assert type(sample.label) == Detections
-        # get all objects from the detections dict
-
-        sample_existing_classes = set(sample.label.detections.keys())
-
-        if self.allow_background:
-            sample_existing_classes.add(self.class2idx['BACKGROUND'])
-
-        selected_class = np.random.choice(list(sample_existing_classes))
-        
-        sample.metadata['chosed_class_name'] = list(self.class2idx.keys())[selected_class]
-        sample.metadata['chosed_class_idx'] = selected_class
-
-        # Chose a random detection from the instances of the selected class, if background was chosen return None
-        random_detection_of_selected_class = np.random.choice(sample.label.detections.get(selected_class,[None]))
-        sample.label = random_detection_of_selected_class
+    def __call__(self, sample: ImageSample):
+        if random.random() < self.p:
+            sample.label = self.class2idx['BACKGROUND']
         
         return sample
     
@@ -64,8 +61,9 @@ class AddShape():
         return sample
     
 class SelectCropCoordinates:
-    def __init__(self, area_scale:Tuple[float,float] = (1.0, 1.0), 
+    def __init__(self, class2idx: dict, area_scale: Tuple[float,float] = (1.0, 1.0), 
                     ratio:Tuple[float,float] = (1, 2), deterministic: bool = False) -> None:
+        self.class2idx = class2idx
         self.area_scale = area_scale
         self.ratio = ratio
 
@@ -75,17 +73,16 @@ class SelectCropCoordinates:
 
     def __call__(self, sample: ImageSample):
         W, H = sample.metadata["W"], sample.metadata["H"]
-        min_w_crop_size, min_h_crop_size = 10, 10
-        w_crop, h_crop = int(np.clip(np.random.exponential(30), min_w_crop_size, W)), int(np.clip(np.random.exponential(30), min_h_crop_size, H))
+        # min_w_crop_size, min_h_crop_size = 10, 10
+        # w_crop, h_crop = int(np.clip(np.random.exponential(30), min_w_crop_size, W)), int(np.clip(np.random.exponential(30), min_h_crop_size, H))
+        w_crop, h_crop = self.generate_crop_dimensions(sample.bbox.area)
         possible_sampling_range_x = (0, W - w_crop + 1)
         possible_sampling_range_y = (0, H - h_crop + 1)
 
-        if sample.metadata['chosed_class_name'] != 'BACKGROUND':
-            assert type(sample.label) == Detection
+        if sample.label != self.class2idx['BACKGROUND']:
             # Select an augmented crop round the existing detection
-            detection: BoundingBox = sample.label.bbox
-            w_crop, h_crop = self.generate_crop_dimensions(detection.area)
-            x0_detection, y0_detection, w_detection, h_detection = detection.raw_values
+            # w_crop, h_crop = self.generate_crop_dimensions(sample.bbox.area)
+            x0_detection, y0_detection, w_detection, h_detection = sample.bbox.raw_values
             crop_w_larger = w_crop >= w_detection
             crop_h_larger = h_crop >= h_detection
 
@@ -94,8 +91,8 @@ class SelectCropCoordinates:
             possible_sampling_range_y = (y0_detection - (h_crop - h_detection), y0_detection) if crop_h_larger \
                                         else (y0_detection, y0_detection + (h_detection - h_crop))
             
-            possible_sampling_range_x = np.clip(possible_sampling_range_x, 0, W - w_crop)
-            possible_sampling_range_y = np.clip(possible_sampling_range_y, 0, H - h_crop)
+            possible_sampling_range_x = np.clip(possible_sampling_range_x, 0, W - w_crop).astype(int)
+            possible_sampling_range_y = np.clip(possible_sampling_range_y, 0, H - h_crop).astype(int)
         
         if len(set(possible_sampling_range_x)) > 1:
             x0 = np.random.randint(*possible_sampling_range_x)
@@ -124,10 +121,4 @@ class CropImage():
     def __call__(self,sample:ImageSample):
         x0, y0, x1, y1 = sample.metadata['crop_coordinates']
         sample.image = sample.image[:, y0: y1, x0: x1]
-        return sample
-
-class DetectionToClassificaton():
-    def __call__(self, sample:ImageSample):
-    
-        sample.label = sample.metadata['chosed_class_idx']
         return sample

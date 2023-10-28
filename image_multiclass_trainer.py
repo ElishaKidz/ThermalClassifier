@@ -5,12 +5,13 @@ from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall
 
 class ImageMultiClassTrainer(pl.LightningModule):
-    def __init__(self, class2idx, model, learning_rate = 1e-3):
+    def __init__(self, class2idx, model, learning_rate = 1e-3, optimizer: str = "adam"):
         super().__init__()
         self.num_target_classes = len(class2idx)
         self.class2idx = class2idx
         self.idx2class = {v: k for k, v in class2idx.items()}
         self.model = model
+        self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.loss = nn.CrossEntropyLoss()
 
@@ -30,10 +31,10 @@ class ImageMultiClassTrainer(pl.LightningModule):
 
     def shared_step(self, batch, batch_idx, split):
         imgs, labels = batch
-        logits = self.model(imgs)
+        logits, _ = self.model(imgs)
         loss = self.loss(logits, labels)
         
-        self.metrices[split](logits.cpu(), labels.cpu())
+        self.metrices[split](logits.detach().cpu(), labels.detach().cpu())
         
         return loss
 
@@ -76,4 +77,10 @@ class ImageMultiClassTrainer(pl.LightningModule):
         self.log_metrices('test')
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        if self.optimizer == "sgd":
+            optimizer = torch.optim.SGD(self.parameters(),
+                              lr=self.learning_rate, momentum=0.9)
+        elif self.optimizer == "adam":
+            optimizer = torch.optim.Adam(self.parameters(),
+                               lr=self.learning_rate)
+        return optimizer
