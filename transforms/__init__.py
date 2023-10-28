@@ -3,7 +3,7 @@ from .prepare_to_models import PreapareToResnet
 from torchvision.transforms import Compose
 
 
-def hit_uav_transforms(split, class2idx, area_scale=[1, 2], resnet_resize=(64, 64)):
+def hit_uav_transforms(split, class2idx, area_scale=[1, 2], resnet_resize=(72, 72)):
     deterministic = False if split == 'train' else True
     return Compose([ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),

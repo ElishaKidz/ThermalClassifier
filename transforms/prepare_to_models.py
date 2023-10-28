@@ -16,7 +16,7 @@ class Model2Transforms:
 
 @Model2Transforms.register(name='resnet18')
 class PreapareToResnet():
-    def __init__(self, resize_shape: tuple = (64, 64)) -> None:
+    def __init__(self, resize_shape: tuple = (72, 72)) -> None:
         self.img_transfomrs = transforms.Compose([
             # 72, 90
             transforms.Resize(resize_shape, antialias=False),
