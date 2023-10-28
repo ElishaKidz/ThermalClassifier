@@ -44,6 +44,7 @@ wandb_logger = WandbLogger(project="VMD-classifier")
 
 trainer = pl.Trainer(default_root_dir=f"gcs://soi-models/VMD-classifier/{args.exp_name}",
                     accelerator='gpu',
+                    devices='1',
                     callbacks=callbacks,
                     logger=wandb_logger,
                     max_epochs=40)
