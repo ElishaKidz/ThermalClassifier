@@ -1,11 +1,11 @@
 import torch
 import gcsfs
-from models.resnet import ModelRepo
+from ThermalClassifier.models.resnet import ModelRepo
 from SoiUtils.general import get_device
-from transforms import inference_transforms
+from ThermalClassifier.transforms import inference_transforms
 import pybboxes as pbx
 from pybboxes import BoundingBox
-from datasets.classes import ImageSample
+from ThermalClassifier.datasets.classes import ImageSample
 import numpy as np
 from PIL import Image
 

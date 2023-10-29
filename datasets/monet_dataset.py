@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import Dataset
-from .classes import ImageSample
+from ThermalClassifier.datasets.classes import ImageSample
 from pycocotools.coco import COCO
 from transforms import monet_transforms
 

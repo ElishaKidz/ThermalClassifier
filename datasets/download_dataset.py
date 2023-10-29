@@ -1,6 +1,6 @@
 from google.cloud import storage
 from pathlib import Path
-from . import datasets_data
+from ThermalClassifier.datasets import datasets_data
 
 
 def download_dataset(root_dir, dataset_name):

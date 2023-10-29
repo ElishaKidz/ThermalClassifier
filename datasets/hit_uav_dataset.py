@@ -1,7 +1,7 @@
 from transforms import hit_uav_transforms
 from torch.utils.data import Dataset
 import torch
-from .classes import ImageSample
+from ThermalClassifier.datasets.classes import ImageSample
 from pycocotools.coco import COCO
 
 class HitUavDataset(Dataset):

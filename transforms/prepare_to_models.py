@@ -1,5 +1,5 @@
 from torchvision import transforms
-from datasets.classes import ImageSample
+from ThermalClassifier.datasets.classes import ImageSample
 
 class Model2Transforms:
     registry = {}

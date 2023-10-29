@@ -5,7 +5,7 @@ import utils
 import cv2 as cv
 import logging
 from PIL import Image
-from predictor import ThermalPredictior
+from ThermalClassifier.predictor import ThermalPredictior
 
 parser = ArgumentParser()
 parser.add_argument('--video_path',type=str)
