@@ -48,7 +48,7 @@ while True:
         if len(frame_related_bboxes) == 0:
             continue
 
-        preds = predictor.predict_frame_bboxes(frame,frame_related_bboxes,args.bbox_format) 
+        preds, _ = predictor.predict_frame_bboxes(frame,frame_related_bboxes,args.bbox_format) 
         translated_predictions.extend(preds)
         
 bboxes_with_class_predicions = bboxes_df.assign(**{args.class_col_name:translated_predictions})

@@ -49,11 +49,12 @@ class ThermalPredictior:
         
         crops_ready_to_model = list(map(lambda sample: self.transforms(sample).image, frame_crops_according_to_bboxes))
         batch = torch.stack(crops_ready_to_model,axis=0).to(self.device)
-        logits, _ = self.model(batch)
+        logits, representations = self.model(batch)
         preds = torch.argmax(logits, dim=1).cpu().detach().tolist()
+        representations = representations.cpu().detach()
         translated_preds = list(map(lambda x: self.classes_to_labels_translation[x],preds))
         
         
-        return translated_preds
+        return translated_preds, representations
 
 
