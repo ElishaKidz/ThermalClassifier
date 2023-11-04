@@ -35,7 +35,7 @@ class ThermalPredictior:
         self.transforms = inference_transforms()
 
 
-    def predict_frame_bboxes(self,frame:Image,frame_related_bboxes:np.array,bboxes_format:str='coco'):
+    def predict_frame_bboxes(self, frame:Image, frame_related_bboxes:np.array, bboxes_format:str='coco'):
 
         frame_crops_according_to_bboxes = []
         for i in range(frame_related_bboxes.shape[0]):
