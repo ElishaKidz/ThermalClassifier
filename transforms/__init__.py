@@ -1,6 +1,7 @@
-from .general_transforms import AddShape, ToTensor, RandomHorizontalFlip, RandomVerticalFlip, RandomRotation, \
+from ThermalClassifier.transforms.general_transforms import AddShape, ToTensor, RandomHorizontalFlip, RandomVerticalFlip, RandomRotation, \
                                     RandomDownSampleImage, SampleBackground, CropImage, SelectCropCoordinates
-from .prepare_to_models import PreapareToResnet
+                                    
+from ThermalClassifier.transforms.prepare_to_models import PreapareToResnet
 from torchvision.transforms import Compose
 
 

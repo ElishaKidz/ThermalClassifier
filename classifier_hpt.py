@@ -2,14 +2,14 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.nn as nn
-from datasets.hit_uav_dataset import HitUavDataset
+from ThermalClassifier.datasets.hit_uav_dataset import HitUavDataset
 import wandb
-from image_multiclass_trainer import ImageMultiClassTrainer
-from models.resnet import resnet18 
+from ThermalClassifier.image_multiclass_trainer import ImageMultiClassTrainer
+from ThermalClassifier.models.resnet import resnet18 
 import os
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
-from transforms import hit_uav_transforms
+from ThermalClassifier.transforms import hit_uav_transforms
 from torch.utils.data import DataLoader
 
 

@@ -1,11 +1,11 @@
 import torch
 import gcsfs
-from models.resnet import ModelRepo
+from ThermalClassifier.models.resnet import ModelRepo
 from SoiUtils.general import get_device
-from transforms import inference_transforms
+from ThermalClassifier.transforms import inference_transforms
 import pybboxes as pbx
 from pybboxes import BoundingBox
-from datasets.classes import ImageSample
+from ThermalClassifier.datasets.classes import ImageSample
 import numpy as np
 from PIL import Image
 
@@ -40,7 +40,7 @@ class ThermalPredictior:
         frame_crops_according_to_bboxes = []
         for i in range(frame_related_bboxes.shape[0]):
             frame_related_bbox = frame_related_bboxes[i,:]
-            frame_related_bbox = BoundingBox.from_coco(*pbx.convert_bbox(frame_related_bbox,from_type=bboxes_format,to_type='coco'))
+            frame_related_bbox = BoundingBox.from_coco(*pbx.convert_bbox(frame_related_bbox,from_type=bboxes_format,to_type='coco',image_size=frame.size))
             x0, y0, x1, y1 = frame_related_bbox.to_voc().raw_values
             #croped_frame = frame[:, y0: y1, x0: x1].float().div(255.0)
             sample = ImageSample(image=frame, label=None, bbox=None)
@@ -49,11 +49,12 @@ class ThermalPredictior:
         
         crops_ready_to_model = list(map(lambda sample: self.transforms(sample).image, frame_crops_according_to_bboxes))
         batch = torch.stack(crops_ready_to_model,axis=0).to(self.device)
-        logits, _ = self.model(batch)
+        logits, representations = self.model(batch)
         preds = torch.argmax(logits, dim=1).cpu().detach().tolist()
+        representations = representations.cpu().detach()
         translated_preds = list(map(lambda x: self.classes_to_labels_translation[x],preds))
         
         
-        return translated_preds
+        return translated_preds, representations
 
 

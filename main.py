@@ -1,11 +1,11 @@
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
-from data_module import GenericDataModule
+from ThermalClassifier.data_module import GenericDataModule
 from lightning.pytorch.loggers import WandbLogger
-from image_multiclass_trainer import ImageMultiClassTrainer
-from models.resnet import resnet18
+from ThermalClassifier.image_multiclass_trainer import ImageMultiClassTrainer
+from ThermalClassifier.models.resnet import resnet18
 from args import args
-from datasets.get_dataset import datasets_dict
+from ThermalClassifier.datasets.get_dataset import datasets_dict
 
 
 classes = ['person', 'vehicle']

@@ -1,5 +1,5 @@
-from .hit_uav_dataset import HitUavDataset
-from .monet_dataset import MONETDataset
+from ThermalClassifier.datasets.hit_uav_dataset import HitUavDataset
+from ThermalClassifier.datasets.monet_dataset import MONETDataset
 
 datasets_dict = {
     'hit-uav': HitUavDataset,

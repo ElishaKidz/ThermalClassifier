@@ -1,4 +1,4 @@
-from datasets.classes import ImageSample
+from ThermalClassifier.datasets.classes import ImageSample
 import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox

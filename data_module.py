@@ -1,8 +1,8 @@
 import pytorch_lightning as pl
 from pathlib import Path
 from torch.utils.data import DataLoader
-from datasets.download_dataset import download_dataset
-from datasets.get_dataset import datasets_dict
+from ThermalClassifier.datasets.download_dataset import download_dataset
+from ThermalClassifier.datasets.get_dataset import datasets_dict
 from torch.utils.data import ConcatDataset
 
 class GenericDataModule(pl.LightningDataModule):
@@ -60,7 +60,7 @@ class GenericDataModule(pl.LightningDataModule):
                                                class2idx=self.class2idx)
             datasets_list.append(dataset)
         return ConcatDataset(datasets_list)
-        
+
     def train_dataloader(self):
         return DataLoader(self.train_dataset, 
                           batch_size=self.train_batch_size, 
