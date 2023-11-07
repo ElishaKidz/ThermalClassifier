@@ -2,20 +2,22 @@ import torch
 import gcsfs
 from ThermalClassifier.models.resnet import ModelRepo
 from SoiUtils.general import get_device
-from ThermalClassifier.transforms import inference_transforms
 import pybboxes as pbx
-from pybboxes import BoundingBox
-from ThermalClassifier.datasets.classes import ImageSample
 import numpy as np
 from PIL import Image
-
+from torchvision import transforms 
+import torchvision.transforms.functional as F
 
 class ThermalPredictior:
     FS = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
 
     def __init__(self,model_name,ckpt_path,load_from_remote=True,device='cpu'):
         self.device = get_device(device)
-    
+        # TODO we need to get the transforms of the model from his ckpt somehow 
+        self.model_transforms = transforms.Compose([
+                                transforms.Resize((72, 72), antialias=False),
+                                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                                ])
         if load_from_remote:
             torch_dict = torch.load(ThermalPredictior.FS.open(ckpt_path, "rb"), map_location='cpu')
         else:
@@ -31,30 +33,25 @@ class ThermalPredictior:
         self.model.to(self.device)
         self.model.eval()
 
-        
-        self.transforms = inference_transforms()
 
-
-    def predict_frame_bboxes(self, frame:Image, frame_related_bboxes:np.array, bboxes_format:str='coco'):
+    @torch.inference_mode()
+    def predict_frame_bboxes(self, frame:Image, frame_related_bboxes: np.array, bboxes_format: str= 'coco'):
 
         frame_crops_according_to_bboxes = []
+        frame_size = frame.size
+        frame = F.to_tensor(frame)
+
         for i in range(frame_related_bboxes.shape[0]):
             frame_related_bbox = frame_related_bboxes[i,:]
-            frame_related_bbox = BoundingBox.from_coco(*pbx.convert_bbox(frame_related_bbox,from_type=bboxes_format,to_type='coco',image_size=frame.size))
-            x0, y0, x1, y1 = frame_related_bbox.to_voc().raw_values
-            #croped_frame = frame[:, y0: y1, x0: x1].float().div(255.0)
-            sample = ImageSample(image=frame, label=None, bbox=None)
-            sample.metadata = {'crop_coordinates': [x0, y0, x1, y1]}
-            frame_crops_according_to_bboxes.append(sample)
-        
-        crops_ready_to_model = list(map(lambda sample: self.transforms(sample).image, frame_crops_according_to_bboxes))
-        batch = torch.stack(crops_ready_to_model,axis=0).to(self.device)
-        logits, representations = self.model(batch)
-        preds = torch.argmax(logits, dim=1).cpu().detach().tolist()
-        representations = representations.cpu().detach()
-        translated_preds = list(map(lambda x: self.classes_to_labels_translation[x],preds))
-        
-        
-        return translated_preds, representations
+            x0, y0, x1, y1 = pbx.convert_bbox(frame_related_bbox, from_type=bboxes_format, to_type="voc", image_size=frame_size)
+            frame_crops_according_to_bboxes.append(self.model_transforms(frame[:, y0: y1, x0: x1]))
 
+        batch = torch.stack(frame_crops_according_to_bboxes, dim=0)
+        logits = self.model(batch)
+        preds = logits.argmax(axis=1).tolist()
+        #representations = representations.cpu()
+        
+        translated_preds = list(map(lambda x: ThermalPredictior.index2class[x], preds))
+        
+        return translated_preds# , representations
 
