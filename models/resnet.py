@@ -31,4 +31,4 @@ class resnet18(nn.Module):
         features = self.feature_extractor(x).flatten(1)
         x = self.dropout(features)
         logits = self.classifier(x)
-        return logits, features
+        return logits# , features

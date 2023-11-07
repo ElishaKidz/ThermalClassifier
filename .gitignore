@@ -11,6 +11,7 @@ inputs/
 gcs:/
 sweeps/
 *.out
+*.onnx
 .vscode/
 # C extensions
 *.so
