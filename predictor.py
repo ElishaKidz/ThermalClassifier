@@ -51,7 +51,7 @@ class ThermalPredictior:
         preds = logits.argmax(axis=1).tolist()
         #representations = representations.cpu()
         
-        translated_preds = list(map(lambda x: ThermalPredictior.index2class[x], preds))
+        translated_preds = list(map(lambda x: self.classes_to_labels_translation[x], preds))
         
         return translated_preds# , representations
 

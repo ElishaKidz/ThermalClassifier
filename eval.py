@@ -47,7 +47,7 @@ def main(remote_dir):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--remote_dir', type=str, default="soi_experiments/annotations-example/")
+    parser.add_argument('--remote_dir', type=str, default="soi_experiments/annotations-example/test/")
     parser.add_argument('--classifier_ckpt_path',type = str,default='gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=14-step=825.ckpt')
     parser.add_argument('--classifier_model_name',default='resnet18',type=str)
     parser.add_argument('--classifier_device',type=int,default=None)
