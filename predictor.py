@@ -23,6 +23,12 @@ class ThermalPredictior:
     def __init__(self, model_name, ckpt_path, load_from_remote=True, device='cpu'):
         self.device = get_device(device)
 
+        self.ort_session = onnxruntime.SessionOptions()
+        # Set graph optimization level
+        self.ort_session.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
+        # To enable model serialization after graph optimization set this
+        self.ort_session.optimized_model_filepath = ckpt_path
+
         self.model_transforms = transforms.Compose([
                                 transforms.Resize((72, 72), antialias=False),
                                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
