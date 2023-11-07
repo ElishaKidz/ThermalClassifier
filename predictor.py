@@ -35,7 +35,8 @@ class ThermalPredictior:
 
 
     @torch.inference_mode()
-    def predict_frame_bboxes(self, frame:Image, frame_related_bboxes: np.array, bboxes_format: str= 'coco'):
+    def predict_frame_bboxes(self, frame:Image, frame_related_bboxes: np.array, bboxes_format: str= 'coco',
+                             get_features: bool = False):
 
         frame_crops_according_to_bboxes = []
         frame_size = frame.size
@@ -47,11 +48,16 @@ class ThermalPredictior:
             frame_crops_according_to_bboxes.append(self.model_transforms(frame[:, y0: y1, x0: x1]))
 
         batch = torch.stack(frame_crops_according_to_bboxes, dim=0)
-        logits = self.model(batch)
-        preds = logits.argmax(axis=1).tolist()
-        #representations = representations.cpu()
         
+        if get_features:
+            logits, features = self.model(batch, get_features=True)
+            features = features.cpu()
+        else:
+            logits = self.model(batch)
+            features = None
+
+        preds = logits.argmax(axis=1).tolist()
         translated_preds = list(map(lambda x: self.classes_to_labels_translation[x], preds))
         
-        return translated_preds# , representations
+        return translated_preds, features
 

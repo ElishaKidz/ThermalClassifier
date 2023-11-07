@@ -27,8 +27,8 @@ class resnet18(nn.Module):
         self.dropout = nn.Dropout(p=p)
         self.classifier = nn.Linear(num_filters, self.num_target_classes)
  
-    def forward(self, x):
+    def forward(self, x, get_features=False):
         features = self.feature_extractor(x).flatten(1)
         x = self.dropout(features)
         logits = self.classifier(x)
-        return logits #, features
+        return (logits, features) if get_features else logits
