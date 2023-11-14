@@ -3,9 +3,9 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from ThermalClassifier.data_module import GenericDataModule
 from lightning.pytorch.loggers import WandbLogger
 from ThermalClassifier.image_multiclass_trainer import ImageMultiClassTrainer
-from ThermalClassifier.models.resnet import resnet18
+from ThermalClassifier.models import models_dict
 from args import args
-from ThermalClassifier.datasets.get_dataset import datasets_dict
+from ThermalClassifier.datasets import datasets_data
 
 
 classes = ['person', 'vehicle']
@@ -21,7 +21,7 @@ val_datasets = args.val_datasets_names.strip().split(",")
 test_datasets = args.test_datasets_names.strip().split(",")
 
 chosen_datasets = set(train_datasets + val_datasets + test_datasets)
-assert all(dataset_name in datasets_dict for dataset_name in chosen_datasets), "one of the datasets is not supported"
+assert all(dataset_name in datasets_data for dataset_name in chosen_datasets), "one of the datasets is not supported"
 
 
 data_module = GenericDataModule(root_dir=args.root_data_dir, 

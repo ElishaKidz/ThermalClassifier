@@ -2,7 +2,8 @@ import pytorch_lightning as pl
 from pathlib import Path
 from torch.utils.data import DataLoader
 from ThermalClassifier.datasets.download_dataset import download_dataset
-from ThermalClassifier.datasets.get_dataset import datasets_dict
+from ThermalClassifier.transforms import datasets_transforms
+from ThermalClassifier.datasets.bbox_classification_dataset import BboxClassificationDataset
 from torch.utils.data import ConcatDataset
 
 class GenericDataModule(pl.LightningDataModule):
@@ -55,9 +56,11 @@ class GenericDataModule(pl.LightningDataModule):
     def get_dataset(self, datasets_names, split):
         datasets_list = []
         for dataset_name in datasets_names:
-            dataset = datasets_dict[dataset_name](data_root_dir=self.root_dir,
-                                               split=split,
-                                               class2idx=self.class2idx)
+            dataset = BboxClassificationDataset(data_root_dir=self.root_dir,
+                                                dataset_name=dataset_name,
+                                                split=split,
+                                                class2idx=self.class2idx,
+                                                transforms=datasets_transforms[dataset_name])
             datasets_list.append(dataset)
         return ConcatDataset(datasets_list)
 
