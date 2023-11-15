@@ -5,6 +5,8 @@ from ThermalClassifier.datasets.download_dataset import download_dataset
 from ThermalClassifier.transforms import datasets_transforms
 from ThermalClassifier.datasets.bbox_classification_dataset import BboxClassificationDataset
 from torch.utils.data import ConcatDataset
+import torchvision
+from torchvision.transforms import Compose
 
 class GenericDataModule(pl.LightningDataModule):
     def __init__(self, 
@@ -13,6 +15,7 @@ class GenericDataModule(pl.LightningDataModule):
                 test_datasets_names: list,
                 class2idx: dict,
                 root_dir: str,
+                model_transforms: torchvision.transforms,
                 train_batch_size: int = 256, 
                 val_batch_size: int = 256,
                 test_batch_size: int = 256,
@@ -27,7 +30,7 @@ class GenericDataModule(pl.LightningDataModule):
         self.test_datasets_names = test_datasets_names
         self.all_datasets_names = set(train_datasets_names + val_datasets_names + test_datasets_names)
         self.root_dir = Path(root_dir)
-
+        self.model_transforms = model_transforms
         self.class2idx = class2idx
 
         # dataloader params
@@ -56,11 +59,14 @@ class GenericDataModule(pl.LightningDataModule):
     def get_dataset(self, datasets_names, split):
         datasets_list = []
         for dataset_name in datasets_names:
+            transforms = Compose([datasets_transforms[dataset_name](split, self.class2idx), 
+                                  self.model_transforms])
+            
             dataset = BboxClassificationDataset(data_root_dir=self.root_dir,
                                                 dataset_name=dataset_name,
                                                 split=split,
                                                 class2idx=self.class2idx,
-                                                transforms=datasets_transforms[dataset_name])
+                                                transforms=transforms)
             datasets_list.append(dataset)
         return ConcatDataset(datasets_list)
 

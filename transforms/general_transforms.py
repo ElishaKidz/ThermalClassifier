@@ -1,4 +1,4 @@
-from ThermalClassifier.datasets.classes import ImageSample
+from ThermalClassifier.datasets.classes import BboxSample
 import numpy as np
 from typing import Tuple
 from pybboxes import BoundingBox
@@ -12,7 +12,7 @@ class RandomDownSampleImage():
         self.down_scale_factor_range = down_scale_factor_range
         self.p = p
 
-    def __call__(self, sample: ImageSample):
+    def __call__(self, sample: BboxSample):
         # image size is [C, H, W]
         if random.random() < self.p:
             down_scale_factor = random.uniform(*self.down_scale_factor_range)
@@ -26,7 +26,7 @@ class ToTensor():
     def __init__(self) -> None:
         self.transform = transforms.ToTensor()
 
-    def __call__(self, sample: ImageSample):
+    def __call__(self, sample: BboxSample):
         sample.image = self.transform(sample.image)
         return sample
 
@@ -34,7 +34,7 @@ class RandomHorizontalFlip():
     def __init__(self, p: float) -> None:
         self.p = p
 
-    def __call__(self, sample: ImageSample):
+    def __call__(self, sample: BboxSample):
         if random.random() < self.p:
             sample.image = hflip(sample.image)
         return sample
@@ -43,7 +43,7 @@ class RandomVerticalFlip():
     def __init__(self, p: float) -> None:
         self.p = p
 
-    def __call__(self, sample: ImageSample):
+    def __call__(self, sample: BboxSample):
         if random.random() < self.p:
             sample.image = vflip(sample.image)
         return sample
@@ -52,7 +52,7 @@ class RandomRotation():
     def __init__(self, degrees: tuple) -> None:
         self.degrees = degrees
 
-    def __call__(self, sample: ImageSample):
+    def __call__(self, sample: BboxSample):
         angle = np.random.randint(*self.degrees)
         sample.image = rotate(sample.image, angle)
         return sample
@@ -65,14 +65,14 @@ class SampleBackground():
         if deterministic:
             np.random.seed(42)
 
-    def __call__(self, sample: ImageSample):
+    def __call__(self, sample: BboxSample):
         if random.random() < self.p:
             sample.label = self.class2idx['BACKGROUND']
         
         return sample
     
 class AddShape():
-    def __call__(self,sample:ImageSample):
+    def __call__(self,sample:BboxSample):
         metadata = sample.metadata
         _, metadata['H'], metadata['W'] = sample.image.shape
         return sample
@@ -88,7 +88,7 @@ class SelectCropCoordinates:
             np.random.seed(42)
             random.seed(42)
 
-    def __call__(self, sample: ImageSample):
+    def __call__(self, sample: BboxSample):
         W, H = sample.metadata["W"], sample.metadata["H"]
         # min_w_crop_size, min_h_crop_size = 10, 10
         # w_crop, h_crop = int(np.clip(np.random.exponential(30), min_w_crop_size, W)), int(np.clip(np.random.exponential(30), min_h_crop_size, H))
@@ -135,7 +135,7 @@ class SelectCropCoordinates:
         return w, h
 
 class CropImage():
-    def __call__(self,sample:ImageSample):
+    def __call__(self,sample:BboxSample):
         x0, y0, x1, y1 = sample.metadata['crop_coordinates']
         sample.image = sample.image[:, y0: y1, x0: x1]
         return sample

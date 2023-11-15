@@ -1,8 +1,13 @@
+from typing import Any
 import pytorch_lightning as pl
 import torch.nn as nn
 import torch
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall
+from torchvision import transforms
+from ThermalClassifier.transforms.prepare_to_models import Model2Transforms
+# from ThermalClassifier.transforms.prepare_to_models import *
+
 
 class ImageMultiClassTrainer(pl.LightningModule):
     def __init__(self, class2idx, model, learning_rate = 1e-3, optimizer: str = "adam"):
@@ -11,6 +16,7 @@ class ImageMultiClassTrainer(pl.LightningModule):
         self.class2idx = class2idx
         self.idx2class = {v: k for k, v in class2idx.items()}
         self.model = model
+        self.model_transforms = self.model.transforms
         self.optimizer = optimizer
         self.learning_rate = learning_rate
         self.loss = nn.CrossEntropyLoss()
@@ -31,7 +37,7 @@ class ImageMultiClassTrainer(pl.LightningModule):
 
     def shared_step(self, batch, batch_idx, split):
         imgs, labels = batch
-        logits, _ = self.model(imgs)
+        logits = self.model(imgs)
         loss = self.loss(logits, labels)
         
         self.metrices[split](logits.detach().cpu(), labels.detach().cpu())
@@ -84,3 +90,33 @@ class ImageMultiClassTrainer(pl.LightningModule):
             optimizer = torch.optim.Adam(self.parameters(),
                                lr=self.learning_rate)
         return optimizer
+    
+    def on_save_checkpoint(self, checkpoint):
+        # Save transform configuration to the checkpoint
+        checkpoint['model_transforms'] = self.serialize_transform(self.model_transforms)
+
+    def on_load_checkpoint(self, checkpoint):
+        # Load transform configuration from the checkpoint
+        self.model_transforms = self.deserialize_transform(checkpoint['model_transforms'])
+
+    def serialize_transform(self, transform):
+        # Convert transform to a serializable format (e.g., a list of dictionaries)
+        if transform is None:
+            return None
+        
+        return {'name': type(self.model_transforms).__name__, 
+                'args': self.model_transforms.get_config()}
+
+    def deserialize_transform(self, transform_config):
+        # Re-create the transform from the serialized configuration
+        if transform_config is None:
+            return None
+        
+        return Model2Transforms.registry[type(self.model).__name__](**transform_config['args'])
+    
+    def predict_step(self, batch, batch_idx, transformed=True, get_features=False) -> Any:
+        if not transformed:
+            batch = self.model_transforms(batch)
+        
+        logits = self.model(batch, get_features)
+        return logits.argmax(axis=1).tolist()

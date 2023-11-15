@@ -24,13 +24,15 @@ chosen_datasets = set(train_datasets + val_datasets + test_datasets)
 assert all(dataset_name in datasets_data for dataset_name in chosen_datasets), "one of the datasets is not supported"
 
 
-data_module = GenericDataModule(root_dir=args.root_data_dir, 
-                            train_datasets_names=train_datasets,
-                            val_datasets_names=val_datasets,
-                            test_datasets_names=test_datasets,
-                            class2idx=new_class2index)
+model = models_dict[args.model](num_target_classes=len(classes))
 
-model = resnet18(num_target_classes=len(classes))
+data_module = GenericDataModule(root_dir=args.root_data_dir, 
+                                train_datasets_names=train_datasets,
+                                val_datasets_names=val_datasets,
+                                test_datasets_names=test_datasets,
+                                class2idx=new_class2index,
+                                model_transforms=model.transforms)
+
 lightning_model = ImageMultiClassTrainer(class2idx=new_class2index, model=model)
 
 checkpoint_callback = ModelCheckpoint(dirpath=f"gcs://soi-models/VMD-classifier/{args.exp_name}/checkpoints",
@@ -47,7 +49,7 @@ trainer = pl.Trainer(default_root_dir=f"gcs://soi-models/VMD-classifier/{args.ex
                     devices='1',
                     callbacks=callbacks,
                     logger=wandb_logger,
-                    max_epochs=40)
+                    max_epochs=2)
 
 trainer.fit(lightning_model, datamodule=data_module)
 

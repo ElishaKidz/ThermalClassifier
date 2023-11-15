@@ -1,6 +1,6 @@
 from torch.utils.data import Dataset
 import torch
-from ThermalClassifier.datasets.classes import ImageSample
+from ThermalClassifier.datasets.classes import BboxSample
 from pycocotools.coco import COCO
 
 class BboxClassificationDataset(Dataset):
@@ -52,9 +52,9 @@ class BboxClassificationDataset(Dataset):
         image_id = self.anns_dict[ann_id]['image_id']
         image_path = f"{self.data_root_dir}/{self.dataset_name}/{self.imgs_dict[image_id]['file_name']}"
         
-        sample = ImageSample.create(image_path, bbox, label)
+        sample = BboxSample.create(image_path, bbox, label)
 
-        #if self.transforms is not None:
-        sample = self.transforms(sample)
+        if self.transforms is not None:
+            sample = self.transforms(sample)
         
         return sample.image, torch.tensor(sample.label)
