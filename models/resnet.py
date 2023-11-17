@@ -2,19 +2,6 @@ import torchvision.models as models
 import torch.nn as nn
 from ThermalClassifier.transforms.prepare_to_models import Model2Transforms
 
-class ModelRepo:
-    registry = {}
-
-    @classmethod
-    def register(cls, name):
-        def inner_wrapper(wrapped_class):
-            if name in cls.registry:
-                print(f'Class {name} already exists. Will replace it')
-            cls.registry[name] = wrapped_class
-            return wrapped_class
-        return inner_wrapper
-
-@ModelRepo.register('resnet18')
 class resnet18(nn.Module):
     def __init__(self, num_target_classes, p: int = 0.3, reshape_size = (72, 72)) -> None:
         super().__init__()
@@ -25,9 +12,10 @@ class resnet18(nn.Module):
         layers = list(backbone.children())[:-1]
 
         self.feature_extractor = nn.Sequential(*layers)
-        self.dropout = nn.Dropout(p=p)
         self.classifier = nn.Linear(num_filters, self.num_target_classes)
+
         self.transforms = Model2Transforms.registry['resnet18'](reshape_size)
+        self.dropout = nn.Dropout(p=p)
     
     def forward(self, x, get_features=False):
         features = self.feature_extractor(x).flatten(1)

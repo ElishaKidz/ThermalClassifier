@@ -1,11 +1,9 @@
 from ThermalClassifier.transforms.general_transforms import AddShape, ToTensor, RandomHorizontalFlip, RandomVerticalFlip, RandomRotation, \
                                     RandomDownSampleImage, SampleBackground, CropImage, SelectCropCoordinates
-                                    
-from ThermalClassifier.transforms.prepare_to_models import PreapareToResnet18
 from torchvision.transforms import Compose
 
 
-def hit_uav_transforms(split, class2idx, area_scale=[1, 2], resnet_resize=(72, 72)):
+def hit_uav_transforms(split, class2idx, area_scale=[1, 2]):
     deterministic = False if split == 'train' else True
     return Compose([ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),
@@ -16,10 +14,9 @@ def hit_uav_transforms(split, class2idx, area_scale=[1, 2], resnet_resize=(72, 7
                     RandomHorizontalFlip(p=0.5),
                     RandomVerticalFlip(p=0.5),
                     RandomRotation(degrees=(0, 45)),
-                    #PreapareToResnet(resnet_resize)
                     ])
 
-def monet_transforms(split, class2idx, area_scale=[0.5, 2], resnet_resize=(72, 72)):
+def monet_transforms(split, class2idx, area_scale=[0.5, 2]):
     deterministic = False if split == 'train' else True
     return Compose([ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),
@@ -28,18 +25,16 @@ def monet_transforms(split, class2idx, area_scale=[0.5, 2], resnet_resize=(72, 7
                     SelectCropCoordinates(class2idx, area_scale, ratio=[1, 1.5], deterministic=deterministic),
                     CropImage(),
                     RandomHorizontalFlip(p=0.5),
-                    #PreapareToResnet(resnet_resize)
                     ])
 
-def kitti_transforms(split, class2idx, area_scale=[0.5, 2], resnet_resize=(72, 72)):
+def kitti_transforms(split, class2idx, area_scale=[0.5, 1]):
     deterministic = False if split == 'train' else True
     return Compose([ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),
                     AddShape(),
-                    SelectCropCoordinates(class2idx, area_scale, ratio=[1, 1.5], deterministic=deterministic),
+                    SelectCropCoordinates(class2idx, area_scale, ratio=[0.8, 1], deterministic=deterministic),
                     CropImage(),
                     RandomHorizontalFlip(p=0.5),
-                    #PreapareToResnet(resnet_resize)
                     ])
 
 datasets_transforms ={
@@ -47,11 +42,3 @@ datasets_transforms ={
     'monet': monet_transforms,
     'kitti': kitti_transforms
 }
-
-def inference_transforms():
-    return Compose([
-        ToTensor(),
-        AddShape(),
-        CropImage(),
-        PreapareToResnet18()
-    ])

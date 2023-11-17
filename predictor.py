@@ -1,38 +1,22 @@
 import torch
 import gcsfs
-from ThermalClassifier.image_multiclass_trainer import ImageMultiClassTrainer
-from ThermalClassifier.models.resnet import ModelRepo, resnet18
+from ThermalClassifier.image_multiclass_trainer import BboxMultiClassClassifier
 from SoiUtils.general import get_device
 import pybboxes as pbx
 import numpy as np
 from PIL import Image
-from torchvision import transforms 
 import torchvision.transforms.functional as F
 
 
-class ThermalPredictior:
+class Predictor:
     FS = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
 
-    def __init__(self,model_name,ckpt_path,load_from_remote=True,device='cpu'):
+    def __init__(self, ckpt_path, load_from_remote=True, device='cpu'):
         self.device = get_device(device)
-        # TODO we need to get the transforms of the model from his ckpt somehow 
-        # self.model_transforms = transforms.Compose([
-        #                         transforms.Resize((72, 72), antialias=False),
-        #                         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        #                         ])
         if load_from_remote:
-            self.model = ImageMultiClassTrainer.load_from_checkpoint(ThermalPredictior.FS.open(ckpt_path, "rb"), model=resnet18(3), map_location='cpu')
+            self.model = BboxMultiClassClassifier.load_from_checkpoint(Predictor.FS.open(ckpt_path, "rb"), map_location='cpu')
         else:
-            self.model = ImageMultiClassTrainer.load_from_checkpoint(ckpt_path,map_location='cpu')
-        
-        # class2idx = torch_dict['hyper_parameters']["class2idx"]
-        # self.classes_to_labels_translation = {index: class_name for class_name, index in class2idx.items()}
-        
-        # state_dict = {key.replace("model.", "") : value for key, value in torch_dict["state_dict"].items()}     
-        # self.model = ModelRepo.registry[model_name](len(class2idx))
-        # self.model.load_state_dict(state_dict)
-        # self.model.to(self.device)
-        # self.model.eval()
+            self.model = BboxMultiClassClassifier.load_from_checkpoint(ckpt_path, map_location='cpu')
 
 
     @torch.inference_mode()

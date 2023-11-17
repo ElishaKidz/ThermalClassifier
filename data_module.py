@@ -2,10 +2,10 @@ import pytorch_lightning as pl
 from pathlib import Path
 from torch.utils.data import DataLoader
 from ThermalClassifier.datasets.download_dataset import download_dataset
+from ThermalClassifier.transforms.prepare_to_models import Transform
 from ThermalClassifier.transforms import datasets_transforms
 from ThermalClassifier.datasets.bbox_classification_dataset import BboxClassificationDataset
 from torch.utils.data import ConcatDataset
-import torchvision
 from torchvision.transforms import Compose
 
 class GenericDataModule(pl.LightningDataModule):
@@ -15,7 +15,7 @@ class GenericDataModule(pl.LightningDataModule):
                 test_datasets_names: list,
                 class2idx: dict,
                 root_dir: str,
-                model_transforms: torchvision.transforms,
+                model_transforms: Transform,
                 train_batch_size: int = 256, 
                 val_batch_size: int = 256,
                 test_batch_size: int = 256,

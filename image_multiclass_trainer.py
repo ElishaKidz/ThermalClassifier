@@ -4,18 +4,19 @@ import torch.nn as nn
 import torch
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall
-from torchvision import transforms
 from ThermalClassifier.transforms.prepare_to_models import Model2Transforms
-# from ThermalClassifier.transforms.prepare_to_models import *
+from ThermalClassifier.models import ModelRepo
 
 
-class ImageMultiClassTrainer(pl.LightningModule):
-    def __init__(self, class2idx, model, learning_rate = 1e-3, optimizer: str = "adam"):
+class BboxMultiClassClassifier(pl.LightningModule):
+    def __init__(self, class2idx, model_name, model_kwargs={}, learning_rate = 1e-3, optimizer: str = "adam"):
         super().__init__()
         self.num_target_classes = len(class2idx)
         self.class2idx = class2idx
         self.idx2class = {v: k for k, v in class2idx.items()}
-        self.model = model
+        self.model_name = model_name
+        self.model_kwargs = model_kwargs
+        self.model = ModelRepo.registry[model_name](num_target_classes=self.num_target_classes, **model_kwargs)
         self.model_transforms = self.model.transforms
         self.optimizer = optimizer
         self.learning_rate = learning_rate
@@ -91,6 +92,16 @@ class ImageMultiClassTrainer(pl.LightningModule):
                                lr=self.learning_rate)
         return optimizer
     
+    def predict_step(self, batch, transformed=True, get_features=False) -> Any:
+        if not transformed:
+            batch = self.model_transforms(batch)
+        
+        logits = self.model(batch, get_features)
+        return logits.argmax(axis=1).tolist()
+
+    def get_model_transforms(self):
+        return self.model.transforms
+
     def on_save_checkpoint(self, checkpoint):
         # Save transform configuration to the checkpoint
         checkpoint['model_transforms'] = self.serialize_transform(self.model_transforms)
@@ -104,7 +115,7 @@ class ImageMultiClassTrainer(pl.LightningModule):
         if transform is None:
             return None
         
-        return {'name': type(self.model_transforms).__name__, 
+        return {'name': type(self.model_transforms).__name__,
                 'args': self.model_transforms.get_config()}
 
     def deserialize_transform(self, transform_config):
@@ -113,10 +124,3 @@ class ImageMultiClassTrainer(pl.LightningModule):
             return None
         
         return Model2Transforms.registry[type(self.model).__name__](**transform_config['args'])
-    
-    def predict_step(self, batch, batch_idx, transformed=True, get_features=False) -> Any:
-        if not transformed:
-            batch = self.model_transforms(batch)
-        
-        logits = self.model(batch, get_features)
-        return logits.argmax(axis=1).tolist()

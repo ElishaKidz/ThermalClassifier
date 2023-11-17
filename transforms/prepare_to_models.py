@@ -1,7 +1,8 @@
-from typing import Union
+from typing import Any, Union
 import torch
 from torchvision import transforms
 from ThermalClassifier.datasets.classes import BboxSample
+from abc import ABC, abstractmethod
 
 class Model2Transforms:
     registry = {}
@@ -15,13 +16,21 @@ class Model2Transforms:
             return wrapped_class
         return inner_wrapper
 
+class Transform(ABC):
+    
+    @abstractmethod
+    def get_config(self):
+        pass
+
+    @abstractmethod
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        pass
 
 @Model2Transforms.register(name='resnet18')
-class PreapareToResnet18():
+class PreapareToResnet18(Transform):
     def __init__(self, resize_shape: tuple = (72, 72)) -> None:
         self.resize_shape = resize_shape
         self.img_transfomrs = transforms.Compose([
-            # 72, 90
             transforms.Resize(resize_shape, antialias=False),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
