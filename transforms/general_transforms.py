@@ -90,12 +90,9 @@ class SelectCropCoordinates:
 
     def __call__(self, sample: BboxSample):
         W, H = sample.metadata["W"], sample.metadata["H"]
-        # min_w_crop_size, min_h_crop_size = 10, 10
-        # w_crop, h_crop = int(np.clip(np.random.exponential(30), min_w_crop_size, W)), int(np.clip(np.random.exponential(30), min_h_crop_size, H))
-        # TODO remove this kitti path !!!!!
-        w_crop, h_crop = self.generate_crop_dimensions(sample.bbox.area)
-        possible_sampling_range_x = (0, W - w_crop + 1) if W - w_crop > 0 else (0, W)
-        possible_sampling_range_y = (0, H - h_crop + 1) if H - h_crop > 0 else (0, H)
+        w_crop, h_crop = self.generate_crop_dimensions(sample.bbox.area, (W, H))
+        possible_sampling_range_x = (0, W - w_crop + 1)
+        possible_sampling_range_y = (0, H - h_crop + 1)
 
         if sample.label != self.class2idx['BACKGROUND']:
             # Select an augmented crop round the existing detection
@@ -127,12 +124,15 @@ class SelectCropCoordinates:
         return sample
 
     
-    def generate_crop_dimensions(self, area):
+    def generate_crop_dimensions(self, area, image_size):
+        image_w, image_h = image_size
         area =  area * np.random.uniform(*self.area_scale)
         ratio = np.random.uniform(*self.ratio)
         w = int(np.sqrt(area) * np.sqrt(ratio))
         h = int(np.sqrt(area) / np.sqrt(ratio))
 
+        w = min(w, image_w)
+        h = min(h, image_h)
         return w, h
 
 class CropImage():

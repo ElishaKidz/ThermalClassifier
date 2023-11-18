@@ -27,12 +27,12 @@ def monet_transforms(split, class2idx, area_scale=[0.5, 2]):
                     RandomHorizontalFlip(p=0.5),
                     ])
 
-def kitti_transforms(split, class2idx, area_scale=[0.5, 1]):
+def kitti_transforms(split, class2idx, area_scale=[1, 1]):
     deterministic = False if split == 'train' else True
     return Compose([ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),
                     AddShape(),
-                    SelectCropCoordinates(class2idx, area_scale, ratio=[0.8, 1], deterministic=deterministic),
+                    SelectCropCoordinates(class2idx, area_scale, ratio=[1, 1], deterministic=deterministic),
                     CropImage(),
                     RandomHorizontalFlip(p=0.5),
                     ])
