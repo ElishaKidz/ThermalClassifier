@@ -1,0 +1,13 @@
+root_data_dir: '/home/xd_eshaar_gcp_idf_il/data'
+exp_name: 'refactor'
+classes: ['person', 'vehicle']
+
+# dataset name is in this format: dataset_dir/.json
+train_datasets: ['kitti/train.json']
+val_datasets: ['kitti/val.json']
+test_datasets: []
+
+add_background_label: True
+epochs: 5
+model: 'resnet18'
+devices: 1

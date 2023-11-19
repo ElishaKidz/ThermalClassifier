@@ -3,8 +3,7 @@ from ThermalClassifier.transforms.general_transforms import AddShape, ToTensor, 
 from torchvision.transforms import Compose
 
 
-def hit_uav_transforms(split, class2idx, area_scale=[1, 2]):
-    deterministic = False if split == 'train' else True
+def hit_uav_transforms(deterministic, class2idx, area_scale=[1, 2]):
     return Compose([ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),
                     # RandomDownSampleImage(down_scale_factor_range=[0.7, 1], p=0.3),
@@ -16,8 +15,7 @@ def hit_uav_transforms(split, class2idx, area_scale=[1, 2]):
                     RandomRotation(degrees=(0, 45)),
                     ])
 
-def monet_transforms(split, class2idx, area_scale=[0.5, 2]):
-    deterministic = False if split == 'train' else True
+def monet_transforms(deterministic, class2idx, area_scale=[0.5, 2]):
     return Compose([ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),
                     # RandomDownSampleImage(down_scale_factor_range=[0.85, 1], p=0.3),
@@ -27,8 +25,7 @@ def monet_transforms(split, class2idx, area_scale=[0.5, 2]):
                     RandomHorizontalFlip(p=0.5),
                     ])
 
-def kitti_transforms(split, class2idx, area_scale=[1, 1]):
-    deterministic = False if split == 'train' else True
+def kitti_transforms(deterministic, class2idx, area_scale=[1, 1]):
     return Compose([ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),
                     AddShape(),

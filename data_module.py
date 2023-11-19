@@ -28,7 +28,8 @@ class GenericDataModule(pl.LightningDataModule):
         self.train_datasets_names = train_datasets_names
         self.val_datasets_names = val_datasets_names
         self.test_datasets_names = test_datasets_names
-        self.all_datasets_names = set(train_datasets_names + val_datasets_names + test_datasets_names)
+        self.all_datasets_names = [dataset_name.split("/")[0] for dataset_name in 
+                                    set(train_datasets_names + val_datasets_names + test_datasets_names)]
         self.root_dir = Path(root_dir)
         self.model_transforms = model_transforms
         self.class2idx = class2idx
@@ -49,22 +50,22 @@ class GenericDataModule(pl.LightningDataModule):
     def setup(self, stage: str) -> None:
         
         if stage == 'fit':
-            self.train_dataset = self.get_dataset(self.train_datasets_names,'train')
+            self.train_dataset = self.get_dataset(self.train_datasets_names, deterministic=False)
             
-            self.val_dataset = self.get_dataset(self.val_datasets_names, 'val') 
+            self.val_dataset = self.get_dataset(self.val_datasets_names) 
 
         if stage == 'test':
-            self.test_dataset = self.get_dataset(self.test_datasets_names, 'test')
+            self.test_dataset = self.get_dataset(self.test_datasets_names)
 
-    def get_dataset(self, datasets_names, split):
+    def get_dataset(self, datasets_names, deterministic=True):
         datasets_list = []
         for dataset_name in datasets_names:
-            transforms = Compose([datasets_transforms[dataset_name](split, self.class2idx), 
+            dataset_name, annotation_file_name = dataset_name.split("/")
+            transforms = Compose([datasets_transforms[dataset_name](deterministic, self.class2idx), 
                                   self.model_transforms])
             
-            dataset = BboxClassificationDataset(data_root_dir=self.root_dir,
-                                                dataset_name=dataset_name,
-                                                split=split,
+            dataset = BboxClassificationDataset(root_dir=f"{self.root_dir}/{dataset_name}",
+                                                annotation_file_name=annotation_file_name,
                                                 class2idx=self.class2idx,
                                                 transforms=transforms)
             datasets_list.append(dataset)
