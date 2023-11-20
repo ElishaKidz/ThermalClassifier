@@ -97,7 +97,6 @@ class BboxMultiClassClassifier(pl.LightningModule):
             batch = self.model_transforms(batch)
 
         logits, features = self.model.predict_step(batch, get_features)
-
         return logits, features
 
     def get_model_transforms(self):
