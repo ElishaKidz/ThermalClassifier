@@ -5,7 +5,7 @@ datasets_data = {
         'DATASET_NAME': 'hit-uav',
         },
     
-    'monet': {
+    'MONET': {
         'BUCKET_NAME': 'civilian-benchmark-datasets',
         'DATASET_NAME': 'MONET'
         },
@@ -13,5 +13,10 @@ datasets_data = {
     'kitti': {
         'BUCKET_NAME': 'civilian-benchmark-datasets',
         'DATASET_NAME': 'kitti'
+        },
+
+    'SODA-D': {
+        'BUCKET_NAME': 'civilian-benchmark-datasets',
+        'DATASET_NAME': 'SODA-D'
         }
 }

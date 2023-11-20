@@ -1,11 +1,15 @@
 from google.cloud import storage
 from pathlib import Path
 from ThermalClassifier.datasets import datasets_data
-
+import os
 
 def download_dataset(root_dir, dataset_name):
+    if os.path.exists(f"{root_dir}/{dataset_name}"):
+        return
+    
     bucket_name = datasets_data[dataset_name]['BUCKET_NAME']
     dataset_name = datasets_data[dataset_name]['DATASET_NAME']
+
 
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)

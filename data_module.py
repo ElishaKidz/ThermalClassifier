@@ -28,8 +28,8 @@ class GenericDataModule(pl.LightningDataModule):
         self.train_datasets_names = train_datasets_names
         self.val_datasets_names = val_datasets_names
         self.test_datasets_names = test_datasets_names
-        self.all_datasets_names = [dataset_name.split("/")[0] for dataset_name in 
-                                    set(train_datasets_names + val_datasets_names + test_datasets_names)]
+        self.all_datasets_names = {dataset_name.split("/")[0] for dataset_name in 
+                                    set(train_datasets_names + val_datasets_names + test_datasets_names)}
         self.root_dir = Path(root_dir)
         self.model_transforms = model_transforms
         self.class2idx = class2idx
@@ -74,14 +74,18 @@ class GenericDataModule(pl.LightningDataModule):
     def train_dataloader(self):
         return DataLoader(self.train_dataset, 
                           batch_size=self.train_batch_size, 
-                          num_workers=self.train_num_workers)
+                          num_workers=self.train_num_workers,
+                          pin_memory=True,
+                          shuffle=True)
 
     def val_dataloader(self):
         return DataLoader(self.val_dataset, 
                           batch_size=self.val_batch_size, 
-                          num_workers=self.val_num_workers)
+                          num_workers=self.val_num_workers,
+                          pin_memory=True)
     
     def test_dataloader(self):
         return DataLoader(self.test_dataset, 
                           batch_size=self.test_batch_size, 
-                          num_workers=self.test_num_workers)
+                          num_workers=self.test_num_workers,
+                          pin_memory=True)

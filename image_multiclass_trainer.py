@@ -63,7 +63,7 @@ class BboxMultiClassClassifier(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         loss = self.shared_step(batch, batch_idx, 'train')
-        self.log('train_loss', loss.item(), on_step=False, on_epoch=True, logger=True)
+        self.log('train_loss', loss.detach(), on_step=False, on_epoch=True, logger=True)
         return loss
 
     def on_train_epoch_end(self) -> None:
@@ -71,14 +71,14 @@ class BboxMultiClassClassifier(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         loss = self.shared_step(batch, batch_idx, 'val')
-        self.log('val_loss', loss.item(), on_step=False, on_epoch=True, logger=True)
+        self.log('val_loss', loss.detach(), on_step=False, on_epoch=True, logger=True)
     
     def on_validation_epoch_end(self):
         self.log_metrices('val')
     
     def test_step(self, batch, batch_idx):
         loss = self.shared_step(batch, batch_idx, 'test')
-        self.log('test_loss', loss.item(), on_step=False, on_epoch=True, logger=True)
+        self.log('test_loss', loss.detach(), on_step=False, on_epoch=True, logger=True)
 
     def on_test_epoch_end(self):
         self.log_metrices('test')

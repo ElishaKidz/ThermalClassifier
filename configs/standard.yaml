@@ -1,13 +1,13 @@
 root_data_dir: '/home/xd_eshaar_gcp_idf_il/data'
-exp_name: 'refactor'
+exp_name: 'soda-d'
 classes: ['person', 'vehicle']
 
 # dataset name is in this format: dataset_dir/.json
-train_datasets: ['kitti/train.json']
-val_datasets: ['kitti/val.json']
-test_datasets: []
+train_datasets: ['SODA-D/train.json']
+val_datasets: ['SODA-D/val.json']
+test_datasets: ['SODA-D/test.json']
 
 add_background_label: True
-epochs: 5
+epochs: 20
 model: 'resnet18'
 devices: 1
