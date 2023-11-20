@@ -21,4 +21,4 @@ class resnet18(nn.Module):
         features = self.feature_extractor(x).flatten(1)
         x = self.dropout(features)
         logits = self.classifier(x)
-        return (logits, features) if get_features else logits
+        return (logits, features) if get_features else (logits, None)

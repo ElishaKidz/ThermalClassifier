@@ -34,12 +34,8 @@ class Predictor:
 
         batch = torch.stack(frame_crops_according_to_bboxes, dim=0)
         
-        if get_features:
-            logits, features = self.model.predict_step(batch, get_features=True)
-            features = features.cpu()
-        else:
-            logits = self.model.predict_step(batch)
-            features = None
+        
+        logits, features = self.model.predict_step(batch, get_features=True)
 
         preds = logits.argmax(axis=1).tolist()
         translated_preds = list(map(lambda x: self.model.idx2class[x], preds))
