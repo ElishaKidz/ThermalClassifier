@@ -37,7 +37,7 @@ def kitti_transforms(deterministic, class2idx, area_scale=[1, 1]):
 def soda_d_transforms(deterministic, class2idx, area_scale=[0.5, 2]):
     return Compose([ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),
-                    RandomDownSampleImage(down_scale_factor_range=[0.8, 1], p=0.3),
+                    # RandomDownSampleImage(down_scale_factor_range=[0.8, 1], p=0.3),
                     AddShape(),
                     SelectCropCoordinates(class2idx, area_scale, ratio=[1, 1.5], deterministic=deterministic),
                     CropImage(),

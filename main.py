@@ -4,8 +4,10 @@ from ThermalClassifier.data_module import GenericDataModule
 from lightning.pytorch.loggers import WandbLogger
 from ThermalClassifier.image_multiclass_trainer import BboxMultiClassClassifier
 import yaml
-
+import os
+ 
 args = yaml.safe_load(open('configs/standard.yaml'))
+args['root_data_dir'] = os.environ['root_data_dir']
 new_class2index = {name.lower(): i for i, name in enumerate(args['classes'])}
 
 if args['add_background_label']:
