@@ -9,8 +9,7 @@ from torchvision import transforms
 import torchvision.transforms.functional as F
 
 class ThermalPredictior:
-    FS = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
-
+    # TODO Add the project name in the gcp as a class constant here, instead of using it below.
     def __init__(self,model_name,ckpt_path,load_from_remote=True,device='cpu'):
         self.device = get_device(device)
         # TODO we need to get the transforms of the model from his ckpt somehow 
@@ -19,7 +18,8 @@ class ThermalPredictior:
                                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                                 ])
         if load_from_remote:
-            torch_dict = torch.load(ThermalPredictior.FS.open(ckpt_path, "rb"), map_location='cpu')
+            fs = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
+            torch_dict = torch.load(fs.open(ckpt_path, "rb"), map_location='cpu')
         else:
             torch_dict = torch.load(ckpt_path,map_location='cpu')
         
