@@ -9,6 +9,7 @@ from torchvision import transforms
 import torchvision.transforms.functional as F
 
 class ThermalPredictior:
+    # TODO Add the project name in the gcp as a class constant here, instead of using it below.
     def __init__(self,model_name,ckpt_path,load_from_remote=True,device='cpu'):
         self.device = get_device(device)
         # TODO we need to get the transforms of the model from his ckpt somehow 
