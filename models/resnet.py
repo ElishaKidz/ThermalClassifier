@@ -7,7 +7,7 @@ class resnet18(nn.Module):
         super().__init__()
         self.num_target_classes = num_target_classes
         # init a pretrained resnet
-        backbone = models.resnet18(weights="DEFAULT")
+        backbone = models.resnet18()
         num_filters = backbone.fc.in_features
         layers = list(backbone.children())[:-1]
 

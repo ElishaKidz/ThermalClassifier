@@ -9,12 +9,12 @@ import torchvision.transforms.functional as F
 
 
 class Predictor:
-    FS = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
 
     def __init__(self, ckpt_path, load_from_remote=True, device='cpu'):
         self.device = get_device(device)
         if load_from_remote:
-            self.model = BboxMultiClassClassifier.load_from_checkpoint(Predictor.FS.open(ckpt_path, "rb"), map_location='cpu')
+            fs = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
+            self.model = BboxMultiClassClassifier.load_from_checkpoint(fs.open(ckpt_path, "rb"), map_location='cpu')
         else:
             self.model = BboxMultiClassClassifier.load_from_checkpoint(ckpt_path, map_location='cpu')
 
