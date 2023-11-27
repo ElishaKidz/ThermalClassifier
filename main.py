@@ -17,7 +17,7 @@ parser.add_argument('--config_path', type=str, required=True, help='YAML path')
 parser.add_argument('--root_data_dir', type=str, required=True, help='root data dir')
 parser.add_argument('--updates', type=str, help='JSON-like string of key-value pairs for updates \
                     (e.g., {"epochs": 10, "learning_rate": 0.001, "labels": ["label1", "label2", "label3"]})')
-args = parser.parse_cfg()
+args = parser.parse_args()
 
 cfg = load_yaml(args.config_path)
 cfg['root_data_dir'] = args.root_data_dir
