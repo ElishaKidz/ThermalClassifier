@@ -44,9 +44,19 @@ def soda_d_transforms(deterministic, class2idx, area_scale=[0.5, 2]):
                     RandomHorizontalFlip(p=0.5),
                     ])
 
+def soi_transforms(deterministic, class2idx, area_scale=[1, 2]):
+    return Compose([ToTensor(),
+                    SampleBackground(class2idx, deterministic, p=0.2),
+                    AddShape(),
+                    SelectCropCoordinates(class2idx, area_scale, ratio=[1, 1.5], deterministic=deterministic),
+                    CropImage(),
+                    RandomHorizontalFlip(p=0.5),
+                    ])
+
 datasets_transforms ={
     'hit-uav': hit_uav_transforms,
     'MONET': monet_transforms,
     'kitti': kitti_transforms,
-    'SODA-D': soda_d_transforms
+    'SODA-D': soda_d_transforms,
+    'SOI': soi_transforms
 }

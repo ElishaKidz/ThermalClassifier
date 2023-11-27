@@ -16,7 +16,7 @@ class BboxClassificationDataset(Dataset):
         try:
             data = COCO(f"{root_dir}/{annotation_file_name}")
         except:
-            Exception(f"{root_dir} does not have {annotation_file_name} !")
+            raise Exception(f"{root_dir} does not have {annotation_file_name} !")
 
         self.class_mapper = self.create_class_mapper(data.cats, class2idx)
 

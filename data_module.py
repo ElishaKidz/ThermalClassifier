@@ -61,7 +61,8 @@ class GenericDataModule(pl.LightningDataModule):
         datasets_list = []
         for dataset_name in datasets_names:
             dataset_name, annotation_file_name = dataset_name.split("/")
-            transforms = Compose([datasets_transforms[dataset_name](deterministic, self.class2idx), 
+            dataset_transform = datasets_transforms.get(dataset_name, datasets_transforms['SOI'])
+            transforms = Compose([dataset_transform(deterministic, self.class2idx), 
                                   self.model_transforms])
             
             dataset = BboxClassificationDataset(root_dir=f"{self.root_dir}/{dataset_name}",

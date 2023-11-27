@@ -38,7 +38,7 @@ class BboxMultiClassClassifier(pl.LightningModule):
 
     def shared_step(self, batch, batch_idx, split):
         imgs, labels = batch
-        logits = self.model(imgs)
+        logits, _ = self.model(imgs)
         loss = self.loss(logits, labels)
         
         self.metrices[split](logits.detach().cpu(), labels.detach().cpu())

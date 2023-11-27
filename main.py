@@ -5,8 +5,8 @@ from lightning.pytorch.loggers import WandbLogger
 from ThermalClassifier.image_multiclass_trainer import BboxMultiClassClassifier
 import os
 from SoiUtils.load import load_yaml
- 
-args = load_yaml('configs/standard.yaml')
+
+args = load_yaml('configs/thermal.yaml')
 args['root_data_dir'] = os.environ['root_data_dir']
 new_class2index = {name.lower(): i for i, name in enumerate(args['classes'])}
 
