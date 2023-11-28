@@ -19,7 +19,7 @@ class ThermalPredictior(Updatable):
                                 transforms.Resize((72, 72), antialias=False),
                                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                                 ])
-        self.model = self._load_model_from_ckpt(ckpt_path, model_name)
+        self._load_model_from_ckpt(ckpt_path, model_name)
 
     def _load_model_from_ckpt(self, ckpt_path, model_name):
         if self.load_from_remote:
@@ -38,8 +38,9 @@ class ThermalPredictior(Updatable):
         self.model.to(self.device)
         self.model.eval()
 
+
     def update(self, ckpt_path, model_name, **kwargs) -> None:
-        self.model = self._load_model_from_ckpt(ckpt_path, model_name)
+        self._load_model_from_ckpt(ckpt_path, model_name)
 
     @torch.inference_mode()
     def predict_frame_bboxes(self, frame:Image, frame_related_bboxes: np.array, bboxes_format: str= 'coco',
