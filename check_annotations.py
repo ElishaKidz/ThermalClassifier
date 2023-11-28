@@ -13,7 +13,7 @@ parser.add_argument('--frame_col_name',type=str,default='frame_num')
 parser.add_argument('--bbox_col_names',nargs='+',default=['x','y','width','height'])
 parser.add_argument('--class_col_name',type=str,default='cls')
 parser.add_argument('--bbox_format',type=str,default='coco')
-parser.add_argument('--frame_limit',type=int,default=500)
+parser.add_argument('--frame_limit',type=int,default=None)
 parser.add_argument('--rendered_video_save_path',type=str,default=Path('outputs/videos/result.mp4'))
 args = parser.parse_args()
 
@@ -24,6 +24,8 @@ data = COCO(args.annotation_path)
 for img_id, annotations in data.imgToAnns.items():
     frame_num = img_id - 1
     for ann in annotations:
+        if ann['attributes']['occluded']:
+            continue
         x, y, w, h = ann['bbox']
         ann_class = data.cats[ann['category_id']]['name']
         new_row = {'x': x, 'y': y, 'width': w, 'height': h, 'frame_num': frame_num, 'cls': ann_class}
