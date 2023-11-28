@@ -12,12 +12,17 @@ class Predictor:
 
     def __init__(self, ckpt_path, load_from_remote=True, device='cpu'):
         self.device = get_device(device)
-        if load_from_remote:
-            fs = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
-            self.model = BboxMultiClassClassifier.load_from_checkpoint(fs.open(ckpt_path, "rb"), map_location='cpu')
-        else:
-            self.model = BboxMultiClassClassifier.load_from_checkpoint(ckpt_path, map_location='cpu')
+        self.load_from_remote = load_from_remote
+        self.model = self._load_model_from_ckpt(ckpt_path)
 
+    def _load_model_from_ckpt(self, ckpt_path):
+        if self.load_from_remote:
+            fs = gcsfs.GCSFileSystem(project="mod-gcp-white-soi-dev-1")
+            return BboxMultiClassClassifier.load_from_checkpoint(fs.open(ckpt_path, "rb"), map_location='cpu')
+        return BboxMultiClassClassifier.load_from_checkpoint(ckpt_path, map_location='cpu')
+
+    def update(self, ckpt_path):
+        self.model = self._load_model_from_ckpt(ckpt_path) 
 
     @torch.inference_mode()
     def predict_frame_bboxes(self, frame:Image, frame_related_bboxes: np.array, bboxes_format: str= 'coco',
