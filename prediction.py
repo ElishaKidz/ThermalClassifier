@@ -10,7 +10,7 @@ from ThermalClassifier.predictor import Predictor
 parser = ArgumentParser()
 parser.add_argument('--video_path',type=str)
 parser.add_argument('--video_bboxes_path', type=str)
-parser.add_argument('--ckpt_path',type = str,default='gcs://soi-models/VMD-classifier/ronen-classifier/checkpoints/epoch=17-step=3060.ckpt')#'gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=14-step=825.ckpt')
+parser.add_argument('--ckpt_path',type = str,default='gcs://soi-models/VMD-classifier/ronen-classifier/checkpoints/epoch=10-step=605.ckpt')#'gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=14-step=825.ckpt')
 parser.add_argument('--model_name',default='resnet18',type=str)
 parser.add_argument('--num_target_classes',type=int,default=4)
 
