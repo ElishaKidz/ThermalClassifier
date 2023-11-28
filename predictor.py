@@ -38,7 +38,7 @@ class ThermalPredictior(Updatable):
         self.model.to(self.device)
         self.model.eval()
 
-    def update(self, ckpt_path, model_name) -> None:
+    def update(self, ckpt_path, model_name, **kwargs) -> None:
         self.model = self._load_model_from_ckpt(ckpt_path, model_name)
 
     @torch.inference_mode()
