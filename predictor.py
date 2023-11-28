@@ -13,7 +13,7 @@ class Predictor:
     def __init__(self, ckpt_path, load_from_remote=True, device='cpu'):
         self.device = get_device(device)
         self.load_from_remote = load_from_remote
-        self.model = self._load_model_from_ckpt(ckpt_path)
+        self.model = self._load_model_from_ckpt(ckpt_path).to(self.device)
 
     def _load_model_from_ckpt(self, ckpt_path):
         if self.load_from_remote:
@@ -22,7 +22,7 @@ class Predictor:
         return BboxMultiClassClassifier.load_from_checkpoint(ckpt_path, map_location='cpu')
 
     def update(self, ckpt_path):
-        self.model = self._load_model_from_ckpt(ckpt_path) 
+        self.model = self._load_model_from_ckpt(ckpt_path).to(self.device)
 
     @torch.inference_mode()
     def predict_frame_bboxes(self, frame:Image, frame_related_bboxes: np.array, bboxes_format: str= 'coco',
@@ -37,7 +37,7 @@ class Predictor:
             x0, y0, x1, y1 = pbx.convert_bbox(frame_related_bbox, from_type=bboxes_format, to_type="voc", image_size=frame_size)
             frame_crops_according_to_bboxes.append(self.model.model_transforms(frame[:, y0: y1, x0: x1]))
 
-        batch = torch.stack(frame_crops_according_to_bboxes, dim=0)
+        batch = torch.stack(frame_crops_according_to_bboxes, dim=0).to(self.device)
         
         
         logits, features = self.model.predict_step(batch, get_features)
