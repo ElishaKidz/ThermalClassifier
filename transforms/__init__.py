@@ -23,6 +23,8 @@ def monet_transforms(deterministic, class2idx, area_scale=[0.5, 2]):
                     SelectCropCoordinates(class2idx, area_scale, ratio=[1, 1.5], deterministic=deterministic),
                     CropImage(),
                     RandomHorizontalFlip(p=0.5),
+                    RandomVerticalFlip(p=0.5),
+                    RandomRotation(degrees=(0, 45)),
                     ])
 
 def kitti_transforms(deterministic, class2idx, area_scale=[1, 1]):
@@ -32,6 +34,8 @@ def kitti_transforms(deterministic, class2idx, area_scale=[1, 1]):
                     SelectCropCoordinates(class2idx, area_scale, ratio=[1, 1], deterministic=deterministic),
                     CropImage(),
                     RandomHorizontalFlip(p=0.5),
+                    RandomVerticalFlip(p=0.5),
+                    RandomRotation(degrees=(0, 45)),
                     ])
 
 def soda_d_transforms(deterministic, class2idx, area_scale=[0.5, 2]):
@@ -42,6 +46,8 @@ def soda_d_transforms(deterministic, class2idx, area_scale=[0.5, 2]):
                     SelectCropCoordinates(class2idx, area_scale, ratio=[1, 1.5], deterministic=deterministic),
                     CropImage(),
                     RandomHorizontalFlip(p=0.5),
+                    RandomVerticalFlip(p=0.5),
+                    RandomRotation(degrees=(0, 45))
                     ])
 
 def soi_transforms(deterministic, class2idx, area_scale=[1, 2]):
@@ -51,6 +57,8 @@ def soi_transforms(deterministic, class2idx, area_scale=[1, 2]):
                     SelectCropCoordinates(class2idx, area_scale, ratio=[1, 1.5], deterministic=deterministic),
                     CropImage(),
                     RandomHorizontalFlip(p=0.5),
+                    RandomVerticalFlip(p=0.5),
+                    RandomRotation(degrees=(0, 45)),
                     ])
 
 datasets_transforms ={
