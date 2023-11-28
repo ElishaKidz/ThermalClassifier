@@ -3,7 +3,6 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from ThermalClassifier.data_module import GenericDataModule
 from lightning.pytorch.loggers import WandbLogger
 from ThermalClassifier.image_multiclass_trainer import BboxMultiClassClassifier
-import os
 from SoiUtils.load import load_yaml
 import argparse
 import json

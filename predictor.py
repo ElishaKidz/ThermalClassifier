@@ -21,7 +21,7 @@ class Predictor:
 
     @torch.inference_mode()
     def predict_frame_bboxes(self, frame:Image, frame_related_bboxes: np.array, bboxes_format: str= 'coco',
-                             get_features: bool = False):
+                             get_features: bool = True):
 
         frame_crops_according_to_bboxes = []
         frame_size = frame.size
@@ -35,7 +35,7 @@ class Predictor:
         batch = torch.stack(frame_crops_according_to_bboxes, dim=0)
         
         
-        logits, features = self.model.predict_step(batch, get_features=True)
+        logits, features = self.model.predict_step(batch, get_features)
 
         preds = logits.argmax(axis=1).tolist()
         translated_preds = list(map(lambda x: self.model.idx2class[x], preds))
