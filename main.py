@@ -25,9 +25,9 @@ if args.updates:
     try:
         updates = json.loads(args.updates)
         update_cfg(cfg, updates)
-        print(f'Updated parameters in {args.file_path}')
+        print(f'Updated parameters in {args.config_path}')
     except json.JSONDecodeError:
-            print('Invalid JSON-like syntax. Please provide updates in the correct format.')
+        print('Invalid JSON-like syntax. Please provide updates in the correct format.')
 
 
 new_class2index = {name.lower(): i for i, name in enumerate(cfg['classes'])}
