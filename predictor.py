@@ -21,7 +21,7 @@ class Predictor:
             return BboxMultiClassClassifier.load_from_checkpoint(fs.open(ckpt_path, "rb"), map_location='cpu')
         return BboxMultiClassClassifier.load_from_checkpoint(ckpt_path, map_location='cpu')
 
-    def update(self, ckpt_path):
+    def update(self, ckpt_path, **kwargs):
         self.model = self._load_model_from_ckpt(ckpt_path).to(self.device)
 
     @torch.inference_mode()
