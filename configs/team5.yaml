@@ -1,4 +1,4 @@
-exp_name: 'soda-d'
+exp_name: 'team-5'
 classes: ['person', 'vehicle']
 
 # dataset name is in this format: dataset_dir/.json
