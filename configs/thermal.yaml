@@ -1,5 +1,6 @@
 exp_name: 'ronen-classifier'
-classes: ['person', 'vehicle']
+gcp_dir_name: 'gcs://soi-models/VMD-classifier'
+classes: ['person', 'vehicle'] 
 
 # dataset name is in this format: dataset_dir/.json
 train_datasets: ['hit-uav/train.json', 

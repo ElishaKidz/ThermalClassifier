@@ -6,6 +6,7 @@ from ThermalClassifier.image_multiclass_trainer import BboxMultiClassClassifier
 from SoiUtils.load import load_yaml
 import argparse
 import json
+import os.path as osp
 
 def update_cfg(data, updates):
     for key, value in updates.items():
@@ -55,7 +56,7 @@ callbacks = [checkpoint_callback]
 wandb_logger = WandbLogger(project="VMD-classifier")
 
 
-trainer = pl.Trainer(default_root_dir=f"gcs://soi-models/VMD-classifier/{cfg['exp_name']}",
+trainer = pl.Trainer(default_root_dir=osp.join(cfg['gcp_dir_name'], cfg['exp_name']),
                     accelerator='gpu',
                     devices=cfg['devices'],
                     callbacks=callbacks,
@@ -64,5 +65,5 @@ trainer = pl.Trainer(default_root_dir=f"gcs://soi-models/VMD-classifier/{cfg['ex
 
 trainer.fit(model, datamodule=data_module)
 
-if cfg['test_datasets'] != []:
+if 'test_datasets' not in cfg:
     trainer.test(model, datamodule=data_module, ckpt_path='best')

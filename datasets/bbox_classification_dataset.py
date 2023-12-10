@@ -2,6 +2,7 @@ from torch.utils.data import Dataset
 import torch
 from ThermalClassifier.datasets.classes import BboxSample
 from pycocotools.coco import COCO
+import os.path as osp
 
 class BboxClassificationDataset(Dataset):
     def __init__(self,
@@ -14,8 +15,8 @@ class BboxClassificationDataset(Dataset):
         self.transforms = transforms
 
         try:
-            data = COCO(f"{root_dir}/{annotation_file_name}")
-        except:
+            data = COCO(osp.join(root_dir, annotation_file_name))
+        except FileNotFoundError:
             raise Exception(f"{root_dir} does not have {annotation_file_name} !")
 
         self.class_mapper = self.create_class_mapper(data.cats, class2idx)
@@ -48,7 +49,7 @@ class BboxClassificationDataset(Dataset):
         label = self.class_mapper[self.anns_dict[ann_id]['category_id']]
     
         image_id = self.anns_dict[ann_id]['image_id']
-        image_path = f"{self.root_dir}/{self.imgs_dict[image_id]['file_name']}"
+        image_path = osp.join(self.root_dir, self.imgs_dict[image_id]['file_name'])
         
         sample = BboxSample.create(image_path, bbox, label)
 
