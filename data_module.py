@@ -1,12 +1,13 @@
 import pytorch_lightning as pl
 from pathlib import Path
 from torch.utils.data import DataLoader
-from ThermalClassifier.datasets.download_dataset import download_dataset
+from ThermalClassifier.datasets import datasets_data
 from ThermalClassifier.transforms.prepare_to_models import Transform
 from ThermalClassifier.transforms import datasets_transforms
 from ThermalClassifier.datasets.bbox_classification_dataset import BboxClassificationDataset
 from torch.utils.data import ConcatDataset
 from torchvision.transforms import Compose
+from SoiUtils.cloud.storage import download_folder
 
 class GenericDataModule(pl.LightningDataModule):
     def __init__(self, 
@@ -45,7 +46,9 @@ class GenericDataModule(pl.LightningDataModule):
 
     def prepare_data(self):
         for dataset_name in self.all_datasets_names:
-            download_dataset(self.root_dir, dataset_name)
+            bucket_name, dataset_dir =  datasets_data[dataset_name]
+            download_folder(self.root_dir, 
+                            bucket_name, dataset_dir)
     
     def setup(self, stage: str) -> None:
         
