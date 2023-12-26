@@ -7,9 +7,9 @@ import numpy as np
 from PIL import Image
 from torchvision import transforms 
 import torchvision.transforms.functional as F
-from SoiUtils.interfaces import Updatable
+from SoiUtils.interfaces import Updatable, Classifier
 
-class ThermalPredictior(Updatable):
+class ThermalPredictior(Updatable,Classifier):
     # TODO Add the project name in the gcp as a class constant here, instead of using it below.
     def __init__(self,model_name,ckpt_path,load_from_remote=True,device='cpu'):
         self.device = get_device(device)
@@ -69,3 +69,7 @@ class ThermalPredictior(Updatable):
         
         return translated_preds, features
 
+
+    def classify(self,*args,**kwargs):
+        return self.predict_frame_bboxes(*args,**kwargs)
+    
