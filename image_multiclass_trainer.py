@@ -24,8 +24,8 @@ class BboxMultiClassClassifier(pl.LightningModule):
 
         metrics = MetricCollection([
             MulticlassAccuracy(self.num_target_classes, average=None), 
-            MulticlassPrecision(self.num_target_classes), 
-            MulticlassRecall(self.num_target_classes)
+            MulticlassPrecision(self.num_target_classes,average=None), 
+            MulticlassRecall(self.num_target_classes,average=None)
         ])
 
         self.metrices = {
@@ -47,20 +47,27 @@ class BboxMultiClassClassifier(pl.LightningModule):
 
     def log_metrices(self, split):
         metrices = self.metrices[split].compute()
-        
-        accuracy_per_class = metrices.pop(f"{split}_MulticlassAccuracy")
-        accuracy_dict = {f"{split}_{class_name}_acc": accuracy_per_class[i] 
+        remaining_metrices = metrices.copy()
+        for metric_name, metric_value in metrices.items():
+            try:
+                if metric_value.shape[0] == self.num_target_classes:
+                    metric_dict = {f"{class_name}_{metric_name}": metric_value[i] 
                      for i, class_name in enumerate(self.class2idx.keys())}
-        
-        accuracy_dict[f"{split}_MulticlassAccuracy"] = accuracy_per_class.mean()
+                    metric_dict[f"{metric_name}"] = metric_value.mean()
+                    self.log_dict(metric_dict, logger=True, on_step=False, on_epoch=True)
+                    remaining_metrices.pop(metric_name)
 
-        self.log_dict(accuracy_dict, logger=True, on_step=False, on_epoch=True)
-        self.log_dict(metrices, logger=True, on_step=False, on_epoch=True)
-
+                else:
+                    continue
+            except:
+                continue             
+        if len(remaining_metrices) != 0:
+            self.log_dict(remaining_metrices, logger=True, on_step=False, on_epoch=True)
         # remember to reset metrics at the end of the epoch
         self.metrices[split].reset()
 
 
+    
     def training_step(self, batch, batch_idx):
         loss = self.shared_step(batch, batch_idx, 'train')
         self.log('train_loss', loss.detach(), on_step=False, on_epoch=True, logger=True)
@@ -100,7 +107,7 @@ class BboxMultiClassClassifier(pl.LightningModule):
         return logits, features
 
     def get_model_transforms(self):
-        return self.model.transforms
+         return self.model.transforms
 
     def on_save_checkpoint(self, checkpoint):
         # Save transform configuration to the checkpoint

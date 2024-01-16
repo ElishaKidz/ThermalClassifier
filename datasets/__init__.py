@@ -1,5 +1,6 @@
 
 datasets_data = {
+    # civilian benchmark datasets
     'hit-uav': {
         'BUCKET_NAME': 'civilian-benchmark-datasets',
         'DATASET_DIR': 'hit-uav',
@@ -20,18 +21,50 @@ datasets_data = {
         'DATASET_DIR': 'SODA-D'
         },
 
-    'Tel_Yitzhak_23102023_drone_middle_3_T - Trim2': {
-        'BUCKET_NAME': 'soi_experiments',
-        'DATASET_DIR': 'annotations-example/test/Tel_Yitzhak_23102023_drone_middle_3_T - Trim2'
-        },
+    # JULIS
+    'IRX_0003.MP4':{
+    'BUCKET_NAME': 'soi_analytics',
+    'DATASET_DIR': 'soi_experiments/Julis_03112023/scene1/ir/IRX_0003.MP4'
+    },
 
-    'task_tel_yitzhak_23102023_drone_low_2_t-2023_11_01_15_33_34-coco 1.0': {
-        'BUCKET_NAME': 'soi_experiments',
-        'DATASET_DIR': 'annotations-example/test/task_tel_yitzhak_23102023_drone_low_2_t-2023_11_01_15_33_34-coco 1.0'
-        },
+    'IRX_0005.MP4':{
+        'BUCKET_NAME': 'soi_analytics',
+        'DATASET_DIR': 'soi_experiments/Julis_03112023/scene2/ir/IRX_0005.MP4'
+    },
 
-    'Tel_Yitzhak_23102023_drone_middle_IRX_0002 - Trim4': {
-        'BUCKET_NAME': 'soi_experiments',
-        'DATASET_DIR': 'annotations-example/test/Tel_Yitzhak_23102023_drone_middle_IRX_0002 - Trim4'
-        },
+    'IRX_0007.MP4':{
+        'BUCKET_NAME': 'soi_analytics',
+        'DATASET_DIR': 'soi_experiments/Julis_03112023/scene3/ir/IRX_0007.MP4'
+
+    },
+    'IRX_0008.MP4':{
+        'BUCKET_NAME': 'soi_analytics',
+        'DATASET_DIR': 'soi_experiments/Julis_03112023/scene4/ir/IRX_0008.MP4'
+
+    },
+    'IRX_0009.MP4':{
+        'BUCKET_NAME': 'soi_analytics',
+        'DATASET_DIR': 'soi_experiments/Julis_03112023/scene5/ir/IRX_0009.MP4'
+    },
+    # Tel Yitzhak 
+    'IRX_0004.MP4':{
+        'BUCKET_NAME': 'soi_analytics',
+        'DATASET_DIR': 'soi_experiments/Tel_Yitzhak_23102023/drone_middle/IRX_0004.MP4'
+
+    },
+    # kadima forest
+    'IRX_0864.MP4':{
+        'BUCKET_NAME': 'soi_analytics',
+        'DATASET_DIR': 'army_extra/Kadima_Forest_16102023/IRX_0864.MP4'
+
+    },
+    # Rosh Haayin
+    'IRX_0022.MP4':{
+        'BUCKET_NAME': 'soi_analytics',
+        'DATASET_DIR': 'army_extra/Rosh_Haayin_Forest_14102023/IRX_0022.MP4'
+
+    },
+
+    
+
 }

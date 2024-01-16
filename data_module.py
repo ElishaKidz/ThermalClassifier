@@ -2,13 +2,14 @@ import pytorch_lightning as pl
 from pathlib import Path
 from torch.utils.data import DataLoader
 from ThermalClassifier.datasets import datasets_data
+from ThermalClassifier.datasets import datasets_data
 from ThermalClassifier.transforms.prepare_to_models import Transform
 from ThermalClassifier.transforms import datasets_transforms
 from ThermalClassifier.datasets.bbox_classification_dataset import BboxClassificationDataset
+
 from torch.utils.data import ConcatDataset
 from torchvision.transforms import Compose
 from SoiUtils.cloud.storage import download_folder
-
 class GenericDataModule(pl.LightningDataModule):
     def __init__(self, 
                 train_datasets_names: list,
@@ -17,6 +18,7 @@ class GenericDataModule(pl.LightningDataModule):
                 class2idx: dict,
                 root_dir: str,
                 model_transforms: Transform,
+                additional_datasets_parameters:dict=None,
                 train_batch_size: int = 256, 
                 val_batch_size: int = 256,
                 test_batch_size: int = 256,
@@ -31,6 +33,8 @@ class GenericDataModule(pl.LightningDataModule):
         self.test_datasets_names = test_datasets_names
         self.all_datasets_names = {dataset_name.split("/")[0] for dataset_name in 
                                     set(train_datasets_names + val_datasets_names + test_datasets_names)}
+        
+        self.additional_datasets_parameters = additional_datasets_parameters if additional_datasets_parameters is not None else {}
         self.root_dir = Path(root_dir)
         self.model_transforms = model_transforms
         self.class2idx = class2idx
@@ -46,9 +50,9 @@ class GenericDataModule(pl.LightningDataModule):
 
     def prepare_data(self):
         for dataset_name in self.all_datasets_names:
-            bucket_name, dataset_dir =  datasets_data[dataset_name]
+            dataset_metadata =  datasets_data[dataset_name]
             download_folder(self.root_dir, 
-                            bucket_name, dataset_dir)
+                            dataset_metadata['BUCKET_NAME'], dataset_metadata['DATASET_DIR'])
     
     def setup(self, stage: str) -> None:
         
@@ -68,10 +72,11 @@ class GenericDataModule(pl.LightningDataModule):
             transforms = Compose([dataset_transform(deterministic, self.class2idx), 
                                   self.model_transforms])
             
+            additional_params = self.additional_datasets_parameters.get(dataset_name,{})
             dataset = BboxClassificationDataset(root_dir=f"{self.root_dir}/{dataset_name}",
                                                 annotation_file_name=annotation_file_name,
                                                 class2idx=self.class2idx,
-                                                transforms=transforms)
+                                                transforms=transforms,**additional_params)
             datasets_list.append(dataset)
         return ConcatDataset(datasets_list)
 

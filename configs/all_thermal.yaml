@@ -1,0 +1,22 @@
+exp_name: 'all_thermal_data_training'
+gcp_dir_name: 'gcs://soi-models/VMD-classifier'
+classes: ['person', 'vehicle'] 
+
+# dataset name is in this format: dataset_dir/.json
+train_datasets: ['hit-uav/train.json',
+                 'hit-uav/val.json',
+                 'MONET/data.json',
+                 'IRX_0005.MP4/instances_default.json',
+                 'IRX_0007.MP4/instances_default.json',
+                 'IRX_0008.MP4/thermal_classifier.json',
+                 'IRX_0004.MP4/thermal_classifier.json',
+                 'IRX_0022.MP4/thermal_classifier.json']
+
+val_datasets: ['IRX_0003.MP4/thermal_classifier.json','IRX_0864.MP4/thermal_classifier.json']
+
+test_datasets: ['IRX_0009.MP4/instances_default.json']
+
+add_background_label: True
+epochs: 30
+model: 'resnet18'
+devices: 1

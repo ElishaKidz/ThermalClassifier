@@ -37,7 +37,6 @@ if cfg['add_background_label']:
     new_class2index['BACKGROUND'] = len(cfg['classes'])
     cfg['classes'].append('BACKGROUND')
 ###
-
 model = BboxMultiClassClassifier(class2idx=new_class2index, model_name=cfg['model'])
 
 data_module = GenericDataModule(root_dir=cfg['root_data_dir'],
@@ -45,7 +44,8 @@ data_module = GenericDataModule(root_dir=cfg['root_data_dir'],
                                 val_datasets_names=cfg['val_datasets'],
                                 test_datasets_names=cfg['test_datasets'],
                                 class2idx=new_class2index,
-                                model_transforms=model.get_model_transforms())
+                                model_transforms=model.get_model_transforms(),
+                                additional_datasets_parameters = cfg.get('additional_datasets_parameters',None))
 
 checkpoint_callback = ModelCheckpoint(dirpath=f"gcs://soi-models/VMD-classifier/{cfg['exp_name']}/checkpoints",
                                       monitor='val_MulticlassAccuracy',
@@ -65,5 +65,5 @@ trainer = pl.Trainer(default_root_dir=osp.join(cfg['gcp_dir_name'], cfg['exp_nam
 
 trainer.fit(model, datamodule=data_module)
 
-if 'test_datasets' not in cfg:
+if 'test_datasets' in cfg:
     trainer.test(model, datamodule=data_module, ckpt_path='best')
