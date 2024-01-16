@@ -56,7 +56,7 @@ class Detections:
 
 
 @dataclass
-class ImageSample():
+class BboxSample():
     image: Union[np.array, torch.Tensor, Image.Image]
     bbox: Union[BoundingBox, None]
     label: Union[int, None]

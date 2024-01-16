@@ -5,12 +5,12 @@ import utils
 import cv2 as cv
 import logging
 from PIL import Image
-from ThermalClassifier.predictor import ThermalPredictior
+from ThermalClassifier.predictor import Predictor
 
 parser = ArgumentParser()
 parser.add_argument('--video_path',type=str)
 parser.add_argument('--video_bboxes_path', type=str)
-parser.add_argument('--ckpt_path',type = str,default='gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=14-step=825.ckpt')
+parser.add_argument('--ckpt_path',type = str,default='gcs://soi-models/VMD-classifier/ronen-classifier/checkpoints/epoch=10-step=605.ckpt')#'gcs://soi-models/VMD-classifier/debug/checkpoints/epoch=14-step=825.ckpt')
 parser.add_argument('--model_name',default='resnet18',type=str)
 parser.add_argument('--num_target_classes',type=int,default=4)
 
@@ -30,7 +30,7 @@ video_cap = utils.create_video_capture(args.video_path)
 
 # The following raw assumes that all models constructors accept only num of classes as input, not sure that this assumption will hold. 
 
-predictor = ThermalPredictior(args.model_name,args.ckpt_path,True,args.device)
+predictor = Predictor(args.ckpt_path, True, args.device)
 
 bboxes_df = pd.read_csv(args.video_bboxes_path,index_col=0)
 translated_predictions = []
@@ -38,7 +38,7 @@ while True:
         frame_num = video_cap.get(cv.CAP_PROP_POS_FRAMES)
         logging.debug(f'frame number {frame_num} is processed')
         success, frame = video_cap.read(0)
-        if not success or frame_num>= args.frame_limit:
+        if not success or frame_num >= args.frame_limit:
             break
 
         frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
