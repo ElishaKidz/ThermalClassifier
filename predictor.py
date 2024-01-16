@@ -11,7 +11,7 @@ from SoiUtils.interfaces import Updatable, Classifier
 
 class Predictor(Updatable,Classifier):
 
-    def __init__(self, ckpt_path, lod_from_remote=True, device='cpu'):
+    def __init__(self, ckpt_path, load_from_remote=True, device='cpu'):
         self.device = get_device(device)
         self.load_from_remote = load_from_remote
         self.model = self._load_model_from_ckpt(ckpt_path).to(self.device)
