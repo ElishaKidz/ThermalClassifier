@@ -41,7 +41,7 @@ class Predictor(Updatable,Classifier):
         batch = torch.stack(frame_crops_according_to_bboxes, dim=0).to(self.device)
         
         
-        logits, features = self.model.predict_step(batch, get_features)
+        logits, features = self.model.predict_step(batch, get_features=get_features)
 
         preds = logits.argmax(axis=1).tolist()
         translated_preds = list(map(lambda x: self.model.idx2class[x], preds))
