@@ -8,7 +8,7 @@ class BboxClassificationDataset(Dataset):
                 root_dir: str,
                 class2idx: dict, 
                 annotation_file_name: str,
-                transforms = None,subsampling=1) -> None:
+                transforms = None,subsampling=3) -> None:
 
         self.root_dir = Path(root_dir)
         self.transforms = transforms
@@ -36,8 +36,8 @@ class BboxClassificationDataset(Dataset):
                                     if ann_dict['category_id'] in self.class_mapper}
         
         # Subsample the video using the subsampling variable
-        self.anns_dict = {ann_id: ann_dict for ann_id, ann_dict in data.anns.items() 
-                                    if ann_dict['image_id'] % subsampling == 0}
+        self.anns_dict = {ann_id: ann_dict for i,(ann_id, ann_dict) in enumerate(data.anns.items()) 
+                                    if i %  subsampling == 0}
         
         self.anns_ids = list(self.anns_dict.keys())
         
