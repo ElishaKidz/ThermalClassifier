@@ -5,7 +5,7 @@ import torch
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall
 from ThermalClassifier.transforms.prepare_to_models import Model2Transforms
-from ThermalClassifier.models import ModelRepo
+from ThermalClassifier.models.resnet import resnet18
 
 
 class BboxMultiClassClassifier(pl.LightningModule):
@@ -16,7 +16,7 @@ class BboxMultiClassClassifier(pl.LightningModule):
         self.idx2class = {v: k for k, v in class2idx.items()}
         self.model_name = model_name
         self.model_kwargs = model_kwargs
-        self.model = ModelRepo.registry[model_name](num_target_classes=self.num_target_classes, **model_kwargs)
+        self.model = resnet18(num_target_classes=self.num_target_classes, **model_kwargs)
         self.model_transforms = self.model.transforms
         self.optimizer = optimizer
         self.learning_rate = learning_rate
