@@ -20,6 +20,20 @@ datasets_data = {
         'BUCKET_NAME': 'civilian-benchmark-datasets',
         'DATASET_DIR': 'SODA-D'
         },
+    
+    'Missiles.v4i.coco': {
+        'BUCKET_NAME': 'civilian-benchmark-datasets',
+        'DATASET_DIR': 'Missiles.v4i.coco'
+        },
+    
+    'bird detection.v5i.coco': {
+        'BUCKET_NAME': 'civilian-benchmark-datasets',
+        'DATASET_DIR': 'bird detection.v5i.coco'
+        },
+    'Cleaned Data.v13i.coco': {
+        'BUCKET_NAME': 'civilian-benchmark-datasets',
+        'DATASET_DIR': 'Cleaned Data.v13i.coco'
+        },
 
     # JULIS
     'IRX_0003.MP4':{

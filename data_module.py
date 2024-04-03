@@ -19,7 +19,7 @@ class GenericDataModule(pl.LightningDataModule):
                 root_dir: str,
                 model_transforms: Transform,
                 additional_datasets_parameters:dict=None,
-                train_batch_size: int = 256, 
+                train_batch_size: int = 32, 
                 val_batch_size: int = 256,
                 test_batch_size: int = 256,
                 train_num_workers: int = 8,

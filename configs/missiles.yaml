@@ -1,0 +1,18 @@
+exp_name: 'missiles_predictor'
+gcp_dir_name: 'gcs://soi-models/missiles-classifier'
+classes: ['Missile', 'bird'] 
+
+# dataset name is in this format: dataset_dir/.json
+train_datasets: ['Missiles.v4i.coco/train.json',
+                 'bird detection.v5i.coco/train.json',
+                 'Cleaned Data.v13i.coco/valid.json'
+                ]
+
+val_datasets: ['Missiles.v4i.coco/valid.json','bird detection.v5i.coco/valid.json']
+
+test_datasets: ['Missiles.v4i.coco/test.json','bird detection.v5i.coco/test.json']
+
+add_background_label: True
+epochs: 30
+model: 'resnet18'
+devices: 1
