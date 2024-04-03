@@ -1,6 +1,14 @@
 ## ThermalClassifier
 Creating a Bbox classifier 
 
+## Prerequisites
+run this code:
+```
+cd ..
+export PYTHONPATH="${PYATHONPATH}:your_parent_dir_name"
+cd ThermalClassifier
+```
+
 ## Datasets
 This repo has some assumptions for the various datasets:
 
