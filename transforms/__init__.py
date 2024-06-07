@@ -1,10 +1,11 @@
 from ThermalClassifier.transforms.general_transforms import AddShape, ToTensor, RandomHorizontalFlip, RandomVerticalFlip, RandomRotation, \
-                                    RandomDownSampleImage, SampleBackground, CropImage, SelectCropCoordinates
+                                    BlackHot2WhiteHot, SampleBackground, CropImage, SelectCropCoordinates
 from torchvision.transforms import Compose
 
 
 def hit_uav_transforms(deterministic, class2idx, area_scale=[1, 2]):
-    return Compose([ToTensor(),
+    return Compose([BlackHot2WhiteHot(),
+                    ToTensor(),
                     SampleBackground(class2idx, deterministic, p=0.2),
                     # RandomDownSampleImage(down_scale_factor_range=[0.7, 1], p=0.3),
                     AddShape(),

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from PIL import Image
-import PIL
+# from PIL import Image
+# import PIL
+import cv2
 from pybboxes import BoundingBox
 from typing import Union
 import numpy as np
@@ -57,7 +58,7 @@ class Detections:
 
 @dataclass
 class BboxSample():
-    image: Union[np.array, torch.Tensor, Image.Image]
+    image: Union[np.array, torch.Tensor, np.array]
     bbox: Union[BoundingBox, None]
     label: Union[int, None]
     metadata = {}
@@ -65,7 +66,9 @@ class BboxSample():
     @classmethod
     # Notice that the default parser is and gray scale parser
     def create(cls, image_path, bbox, label):
-        image =  Image.open(image_path).convert("RGB")
-        bbox = BoundingBox.from_coco(*bbox, image_size=image.size)
+        # image =  Image.open(image_path).convert("RGB")
+        image = cv2.imread(str(image_path))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        bbox = BoundingBox.from_coco(*bbox, image_size=image.shape[:2][::-1])
  
         return cls(image, bbox, label)

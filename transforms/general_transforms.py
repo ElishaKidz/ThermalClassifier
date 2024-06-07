@@ -1,5 +1,6 @@
 from ThermalClassifier.datasets.classes import BboxSample
 import numpy as np
+import cv2
 from typing import Tuple
 from pybboxes import BoundingBox
 import random
@@ -139,4 +140,11 @@ class CropImage():
     def __call__(self,sample:BboxSample):
         x0, y0, x1, y1 = sample.metadata['crop_coordinates']
         sample.image = sample.image[:, y0: y1, x0: x1]
+        return sample
+
+class BlackHot2WhiteHot():
+    def __call__(self, sample: BboxSample):
+        sample.image = cv2.cvtColor(sample.image, cv2.COLOR_RGB2GRAY)
+        sample.image = cv2.bitwise_not(sample.image)
+        sample.image = cv2.cvtColor(sample.image, cv2.COLOR_GRAY2RGB)
         return sample
