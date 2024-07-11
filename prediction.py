@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 import pandas as pd
-import utils
+import utils.utils as utils
 import cv2 as cv
 import logging
 from PIL import Image
