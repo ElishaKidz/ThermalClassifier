@@ -1,5 +1,5 @@
 import pandas as pd
-import utils
+import utils.utils as utils
 import cv2 as cv
 from pathlib import Path
 from argparse import ArgumentParser
